@@ -41,47 +41,63 @@ mwin = QRS.moving_window_integration(sqr, fs)
 start_plot = 300
 stop_plot = 3300
 
-# Plotting raw signal
-plt.figure(figsize = (20,4), dpi = 100)
+f, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, 1, sharex = True)
 plt.xticks(np.arange(start_plot,stop_plot, 250))
-plt.plot(mne_ecg[start_plot:stop_plot])
-# plt.axvline(x = 300000, color = 'r')
-# plt.axvline(x = 600000, color = 'r')
+ax1.plot(mne_ecg[start_plot:stop_plot])
+ax2.plot(bpass[start_plot:stop_plot])
+ax3.plot(der[start_plot:stop_plot])
+ax4.plot(sqr[start_plot:stop_plot])
+ax5.plot(mwin[start_plot:stop_plot])
+ax1.title.set_text("Raw Signal")
+ax2.title.set_text('Bandpassed Signal')
+ax3.title.set_text('Derivative Signal')
+ax4.title.set_text('Squared Signal')
+ax5.title.set_text('Moving Window Integrated Signal')
 plt.xlabel('Samples')
 plt.ylabel('mV')
-plt.title("Raw Signal")
+plt.show()
 
-# Plotting bandpassed signal
-plt.figure(figsize = (20,4), dpi = 100)
-plt.xticks(np.arange(start_plot,stop_plot, 250))
-plt.plot(bpass[start_plot:stop_plot])
-plt.xlabel('Samples')
-plt.ylabel('mV')
-plt.title("Bandpassed Signal")
+# # Plotting raw signal
+# plt.figure(figsize = (20,4), dpi = 100)
+# plt.xticks(np.arange(start_plot,stop_plot, 250))
+# plt.plot(mne_ecg[start_plot:stop_plot])
+# # plt.axvline(x = 300000, color = 'r')
+# # plt.axvline(x = 600000, color = 'r')
+# plt.xlabel('Samples')
+# plt.ylabel('mV')
+# plt.title("Raw Signal")
 
-# Plotting derived signal
-plt.figure(figsize = (20,4), dpi = 100)
-plt.xticks(np.arange(start_plot,stop_plot, 250))
-plt.plot(der[start_plot:stop_plot])
-plt.xlabel('Samples')
-plt.ylabel('mV')
-plt.title("Derivative Signal")
+# # Plotting bandpassed signal
+# plt.figure(figsize = (20,4), dpi = 100)
+# plt.xticks(np.arange(start_plot,stop_plot, 250))
+# plt.plot(bpass[start_plot:stop_plot])
+# plt.xlabel('Samples')
+# plt.ylabel('mV')
+# plt.title("Bandpassed Signal")
 
-# Plotting squared signal
-plt.figure(figsize = (20,4), dpi = 100)
-plt.xticks(np.arange(start_plot,stop_plot, 250))
-plt.plot(sqr[start_plot:stop_plot])
-plt.xlabel('Samples')
-plt.ylabel('mV')
-plt.title("Squared Signal")
+# # Plotting derived signal
+# plt.figure(figsize = (20,4), dpi = 100)
+# plt.xticks(np.arange(start_plot,stop_plot, 250))
+# plt.plot(der[start_plot:stop_plot])
+# plt.xlabel('Samples')
+# plt.ylabel('mV')
+# plt.title("Derivative Signal")
 
-# Plotting moving window integrated signal
-plt.figure(figsize = (20,4), dpi = 100)
-plt.xticks(np.arange(start_plot,stop_plot, 250))
-plt.plot(mwin[start_plot:stop_plot])
-plt.xlabel('Samples')
-plt.ylabel('mV')
-plt.title("Moving Window Integrated Signal")
+# # Plotting squared signal
+# plt.figure(figsize = (20,4), dpi = 100)
+# plt.xticks(np.arange(start_plot,stop_plot, 250))
+# plt.plot(sqr[start_plot:stop_plot])
+# plt.xlabel('Samples')
+# plt.ylabel('mV')
+# plt.title("Squared Signal")
+
+# # Plotting moving window integrated signal
+# plt.figure(figsize = (20,4), dpi = 100)
+# plt.xticks(np.arange(start_plot,stop_plot, 250))
+# plt.plot(mwin[start_plot:stop_plot])
+# plt.xlabel('Samples')
+# plt.ylabel('mV')
+# plt.title("Moving Window Integrated Signal")
 
 
 # Find the R peak locations
@@ -118,6 +134,16 @@ plt.ylabel('mV')
 plt.title("R Peak Locations")
 
 r_peak = np.unique(result)
+
+###Pre Process, Data Cleaning ECG###
+a = []
+a += [value for value in r_peak if value <237]
+new_r_peak = [value for value in r_peak if value not in a]
+new_r_peak = np.array(new_r_peak)
+
+r_peak = new_r_peak.copy()
+###Pre Process, Data Cleaning ECG###
+
 rri = r_peak.copy()
 rri[1:] = rri[1:] - rri[:-1]
 

@@ -41,47 +41,21 @@ mwin = QRS.moving_window_integration(sqr, fs)
 start_plot = 300
 stop_plot = 3300
 
-# Plotting raw signal
-plt.figure(figsize = (20,4), dpi = 100)
+f, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, 1, sharex = True)
 plt.xticks(np.arange(start_plot,stop_plot, 250))
-plt.plot(mne_ecg[start_plot:stop_plot])
-# plt.axvline(x = 300000, color = 'r')
-# plt.axvline(x = 600000, color = 'r')
+ax1.plot(mne_ecg[start_plot:stop_plot])
+ax2.plot(bpass[start_plot:stop_plot])
+ax3.plot(der[start_plot:stop_plot])
+ax4.plot(sqr[start_plot:stop_plot])
+ax5.plot(mwin[start_plot:stop_plot])
+ax1.title.set_text("Raw Signal")
+ax2.title.set_text('Bandpassed Signal')
+ax3.title.set_text('Derivative Signal')
+ax4.title.set_text('Squared Signal')
+ax5.title.set_text('Moving Window Integrated Signal')
 plt.xlabel('Samples')
 plt.ylabel('mV')
-plt.title("Raw Signal")
-
-# Plotting bandpassed signal
-plt.figure(figsize = (20,4), dpi = 100)
-plt.xticks(np.arange(start_plot,stop_plot, 250))
-plt.plot(bpass[start_plot:stop_plot])
-plt.xlabel('Samples')
-plt.ylabel('mV')
-plt.title("Bandpassed Signal")
-
-# Plotting derived signal
-plt.figure(figsize = (20,4), dpi = 100)
-plt.xticks(np.arange(start_plot,stop_plot, 250))
-plt.plot(der[start_plot:stop_plot])
-plt.xlabel('Samples')
-plt.ylabel('mV')
-plt.title("Derivative Signal")
-
-# Plotting squared signal
-plt.figure(figsize = (20,4), dpi = 100)
-plt.xticks(np.arange(start_plot,stop_plot, 250))
-plt.plot(sqr[start_plot:stop_plot])
-plt.xlabel('Samples')
-plt.ylabel('mV')
-plt.title("Squared Signal")
-
-# Plotting moving window integrated signal
-plt.figure(figsize = (20,4), dpi = 100)
-plt.xticks(np.arange(start_plot,stop_plot, 250))
-plt.plot(mwin[start_plot:stop_plot])
-plt.xlabel('Samples')
-plt.ylabel('mV')
-plt.title("Moving Window Integrated Signal")
+plt.show()
 
 
 # Find the R peak locations
@@ -117,8 +91,18 @@ plt.xlabel('Samples')
 plt.ylabel('mV')
 plt.title("R Peak Locations")
 
-#r_peak = np.unique(result)
-r_peak = result.copy()
+r_peak = np.unique(result)
+
+###Pre Process, Data Cleaning ECG###
+a = []
+a += [value for value in r_peak if 500 <= value <= 1000 or 604500 <= value <= 605000]
+new_r_peak = [value for value in r_peak if value not in a]
+new_r_peak = np.array(new_r_peak)
+
+r_peak = new_r_peak.copy()
+
+del(a, new_r_peak)
+###Pre Process, Data Cleaning ECG###
 
 rri = r_peak.copy()
 rri[1:] = rri[1:] - rri[:-1]
@@ -140,9 +124,9 @@ plt.ylabel('RRI [ms]')
 plt.xlabel('Time [sec]')
 
 #Data grouping
-y_firstrest = y_vals[0:300000]
-y_stress = y_vals[300001:600000]
-y_secondrest = y_vals[600001:]
+y_firstrest = y_vals[0:292490]
+y_stress = y_vals[292490:591245]
+y_secondrest = y_vals[591245:891245]
 
 #Spectrogram RRI
 nperseg = 100000
