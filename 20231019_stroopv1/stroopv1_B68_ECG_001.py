@@ -8,19 +8,29 @@ Created on Tue Nov 14 12:43:19 2023
 import mne
 import numpy as np
 import scipy
+import os
 from scipy.fft import fft, fftfreq
 from matplotlib import pyplot as plt
 from pan_tompkins import pan_tompkins_qrs
 from pan_tompkins import heart_rate
 
 fs = 1000
-raw = mne.io.read_raw_brainvision("20231019_B68_stroopv1_0001.vhdr")
+directory_path = "D:/EEG RESEARCH DATA"
+os.chdir(directory_path)
+
+raw = mne.io.read_raw_brainvision("20231019_B68_stroopv1/20231019_B68_stroopv1_0001.vhdr")
+
+# Reconstruct the original events from our Raw object
+events, event_ids = mne.events_from_annotations(raw)
 
 raw.set_channel_types({'ECG':'ecg'})
 raw.set_channel_types({'vEOG':'eog'})
 raw.set_channel_types({'hEOG':'eog'})
 
-raw_ecg = raw.crop(tmin = 39.471, tmax = 939.971).copy().pick_types(eeg=False, eog=False, ecg=True)
+tmin = events[9,0]/1000
+tmax = events[-1,0]/1000
+
+raw_ecg = raw.crop(tmin = tmin, tmax = tmax).copy().pick_types(eeg=False, eog=False, ecg=True)
 
 
 mne_ecg, mne_time = raw_ecg[:]
@@ -37,47 +47,64 @@ mwin = QRS.moving_window_integration(sqr, fs)
 start_plot = 300
 stop_plot = 3300
 
-# Plotting raw signal
-plt.figure(figsize = (20,4), dpi = 100)
-plt.xticks(np.arange(start_plot,stop_plot, 250))
-plt.plot(mne_ecg[start_plot:stop_plot])
-# plt.axvline(x = 300000, color = 'r')
-# plt.axvline(x = 600000, color = 'r')
-plt.xlabel('Samples')
-plt.ylabel('mV')
-plt.title("Raw Signal")
 
-# Plotting bandpassed signal
-plt.figure(figsize = (20,4), dpi = 100)
+f, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, 1, sharex = True)
 plt.xticks(np.arange(start_plot,stop_plot, 250))
-plt.plot(bpass[start_plot:stop_plot])
+ax1.plot(mne_ecg[start_plot:stop_plot])
+ax2.plot(bpass[start_plot:stop_plot])
+ax3.plot(der[start_plot:stop_plot])
+ax4.plot(sqr[start_plot:stop_plot])
+ax5.plot(mwin[start_plot:stop_plot])
+ax1.title.set_text("Raw Signal")
+ax2.title.set_text('Bandpassed Signal')
+ax3.title.set_text('Derivative Signal')
+ax4.title.set_text('Squared Signal')
+ax5.title.set_text('Moving Window Integrated Signal')
 plt.xlabel('Samples')
 plt.ylabel('mV')
-plt.title("Bandpassed Signal")
+plt.show()
 
-# Plotting derived signal
-plt.figure(figsize = (20,4), dpi = 100)
-plt.xticks(np.arange(start_plot,stop_plot, 250))
-plt.plot(der[start_plot:stop_plot])
-plt.xlabel('Samples')
-plt.ylabel('mV')
-plt.title("Derivative Signal")
+# # Plotting raw signal
+# plt.figure(figsize = (20,4), dpi = 100)
+# plt.xticks(np.arange(start_plot,stop_plot, 250))
+# plt.plot(mne_ecg[start_plot:stop_plot])
+# # plt.axvline(x = 300000, color = 'r')
+# # plt.axvline(x = 600000, color = 'r')
+# plt.xlabel('Samples')
+# plt.ylabel('mV')
+# plt.title("Raw Signal")
 
-# Plotting squared signal
-plt.figure(figsize = (20,4), dpi = 100)
-plt.xticks(np.arange(start_plot,stop_plot, 250))
-plt.plot(sqr[start_plot:stop_plot])
-plt.xlabel('Samples')
-plt.ylabel('mV')
-plt.title("Squared Signal")
+# # Plotting bandpassed signal
+# plt.figure(figsize = (20,4), dpi = 100)
+# plt.xticks(np.arange(start_plot,stop_plot, 250))
+# plt.plot(bpass[start_plot:stop_plot])
+# plt.xlabel('Samples')
+# plt.ylabel('mV')
+# plt.title("Bandpassed Signal")
 
-# Plotting moving window integrated signal
-plt.figure(figsize = (20,4), dpi = 100)
-plt.xticks(np.arange(start_plot,stop_plot, 250))
-plt.plot(mwin[start_plot:stop_plot])
-plt.xlabel('Samples')
-plt.ylabel('mV')
-plt.title("Moving Window Integrated Signal")
+# # Plotting derived signal
+# plt.figure(figsize = (20,4), dpi = 100)
+# plt.xticks(np.arange(start_plot,stop_plot, 250))
+# plt.plot(der[start_plot:stop_plot])
+# plt.xlabel('Samples')
+# plt.ylabel('mV')
+# plt.title("Derivative Signal")
+
+# # Plotting squared signal
+# plt.figure(figsize = (20,4), dpi = 100)
+# plt.xticks(np.arange(start_plot,stop_plot, 250))
+# plt.plot(sqr[start_plot:stop_plot])
+# plt.xlabel('Samples')
+# plt.ylabel('mV')
+# plt.title("Squared Signal")
+
+# # Plotting moving window integrated signal
+# plt.figure(figsize = (20,4), dpi = 100)
+# plt.xticks(np.arange(start_plot,stop_plot, 250))
+# plt.plot(mwin[start_plot:stop_plot])
+# plt.xlabel('Samples')
+# plt.ylabel('mV')
+# plt.title("Moving Window Integrated Signal")
 
 
 # Find the R peak locations
