@@ -27,8 +27,8 @@ raw.set_channel_types({'ECG':'ecg'})
 raw.set_channel_types({'vEOG':'eog'})
 raw.set_channel_types({'hEOG':'eog'})
 
-tmin = events[9,0]/1000
-tmax = events[-1,0]/1000
+tmin = events[9,0]/fs
+tmax = events[-1,0]/fs
 
 raw_ecg = raw.crop(tmin = tmin, tmax = tmax).copy().pick_types(eeg=False, eog=False, ecg=True)
 
