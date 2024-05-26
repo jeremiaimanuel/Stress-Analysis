@@ -1,10 +1,8 @@
-from matplotlib import pyplot as plt
 import numpy as np
+from scipy import signal as sg
 
 class pan_tompkins_qrs():
     def bpf(self,x):
-        
-        
         
         y_filtered = None
 
@@ -123,9 +121,6 @@ class pan_tompkins_qrs():
         mwin = self.moving_window_integration(sqr.copy(),fs)
 
         return mwin
-
-
-from scipy import signal as sg
 
 class heart_rate():
     def __init__(self,x,fs):
