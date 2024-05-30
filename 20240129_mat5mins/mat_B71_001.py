@@ -11,6 +11,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from mne.preprocessing import ICA, create_ecg_epochs, create_eog_epochs
 
+fs=1000
 directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
 
@@ -26,7 +27,10 @@ raw.set_channel_types({'hEOG':'eog'})
 
 raw.set_montage(montage)
 
-raw_temp = raw.copy().crop(tmin = 17.101, tmax = 918.461) #make a copy
+tmin = events[3,0]/fs
+tmax = events[-1,0]/fs
+
+raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax) #make a copy
 
 
 regexp = r"(ECG|vEOG|hEOG)"

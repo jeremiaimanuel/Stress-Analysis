@@ -54,8 +54,8 @@ der = QRS.derivative(bpass,fs)
 sqr = QRS.squaring(der)
 mwin = QRS.moving_window_integration(sqr, fs)
 
-start_plot = 0
-stop_plot = len(mne_ecg)
+start_plot = 300
+stop_plot = 3300
 
 f, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, 1, sharex = True)
 plt.xticks(np.arange(start_plot,stop_plot, 250))
