@@ -14,7 +14,7 @@ from mne.preprocessing import ICA, create_ecg_epochs, create_eog_epochs
 directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
 
-raw = mne.io.read_raw_brainvision("20240129_mat5mins/20240129_mat5mins_001.vhdr")
+raw = mne.io.read_raw_brainvision("20240418_mat5mins/20240418_B98_jikken_0003.vhdr")
 
 # Reconstruct the original events from our Raw object
 events, event_ids = mne.events_from_annotations(raw)
@@ -26,7 +26,11 @@ raw.set_channel_types({'hEOG':'eog'})
 
 raw.set_montage(montage)
 
-raw_temp = raw.copy().crop(tmin = 17.101, tmax = 918.461) #make a copy
+fs = 1000
+tmin = events[3,0]/fs #Experiment Begin 
+tmax = events[-1,0]/fs #Task Begin
+
+raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax) #make a copy
 
 
 regexp = r"(ECG|vEOG|hEOG)"
@@ -45,6 +49,10 @@ ica.fit(filt_raw)
 ica
 ica.plot_sources(raw_temp, show_scrollbars=True)
 ica.plot_components()
+
+########## Save ICA Analysis ##########
+ica.save(fname="20240418_mat5mins/20240418_B98_jikken_0003-ica.fif", overwrite = True)
+########## Save ICA Analysis ##########
 
 sources = ica.get_sources(raw_temp)
 # sources = raw_temp.copy()
