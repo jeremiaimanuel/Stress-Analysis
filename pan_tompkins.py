@@ -5,7 +5,8 @@ class pan_tompkins_qrs():
     def bpf(self,x):
         
         y_filtered = None
-
+        
+        # x = np.squeeze(x)
         #Results will be delayed 16 Samples
         y = x.copy()
 
@@ -106,19 +107,19 @@ class pan_tompkins_qrs():
 
         # Bandpass Filter
         global bpass
-        bpass = self.bpf(input_signal.copy())
+        bpass = self.bpf(input_signal)
 
         # Derivative Function
         global der
-        der = self.derivative(bpass.copy(),fs)
+        der = self.derivative(bpass,fs)
 
         # Squaring Function
         global sqr
-        sqr = self.squaring(der.copy())
+        sqr = self.squaring(der)
 
         # Moving Window Integration Function
         global mwin
-        mwin = self.moving_window_integration(sqr.copy(),fs)
+        mwin = self.moving_window_integration(sqr,fs)
 
         return mwin
 
@@ -132,6 +133,7 @@ class heart_rate():
         self.m_win = mwin
         self.b_pass = bpass
         self.fs = fs
+        # self.signal = np.squeeze(x)
         self.signal = x
         self.win_150ms = round(0.15*self.fs)
 
@@ -141,14 +143,10 @@ class heart_rate():
         self.RR_Average1 = 0
 
     def approx_peak(self):
-        ###To smoothening the slopes so that it shapes more trapezoid by convoluting the digital filtered ecg with straight line
-        ###Why 25, im assuming its the minimum value so that it smoothening the moving window enough without changing the length of its slopes too much
-        ###Change from the original code by making the size to (A x 1) instead of (A x )###
-        slopes = sg.fftconvolve(self.m_win, np.full((25,1),1)/25, mode='same')
-        ###Change from the original code by making the size to (A x 1) instead of (A x )###
+        slopes = sg.fftconvolve(self.m_win, np.full((25,),1)/25, mode='same')
 
-        # for i in range(round(0.5*self.fs) + 1,len(slopes)-1):
-        for i in range(0,len(slopes)-1):
+        for i in range(round(0.5*self.fs) + 1,len(slopes)-1):
+        # for i in range(0,len(slopes)-1):
             if (slopes[i] > slopes[i-1]) and (slopes[i+1] <slopes[i]):
                 self.peaks.append(i)
 
@@ -312,16 +310,17 @@ class heart_rate():
 
         # Filter the unique R peak locations
         self.r_locs = np.unique(np.array(self.r_locs).astype(int))
-
+        
         # Initialize a window to searchback
         win_200ms = round(0.2*self.fs)
     
         for r_val in self.r_locs:
+            
             coord = np.arange(r_val - win_200ms, min(len(self.signal), r_val + win_200ms + 1), 1)
-
+            
             # Find the x location of the max peak value
             if (len(coord) > 0):
-                for pos in coord:
+                for pos in coord:               
                     if (self.signal[pos] == max(self.signal[coord])):
                         x_max = pos
                         break

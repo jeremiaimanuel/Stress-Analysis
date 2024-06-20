@@ -8,8 +8,7 @@ Created on Tue Nov 14 12:43:19 2023
 import mne
 import os
 import numpy as np
-import scipy
-from scipy.fft import fft, fftfreq
+from scipy import signal
 from matplotlib import pyplot as plt
 from pan_tompkins import pan_tompkins_qrs
 from pan_tompkins import heart_rate
@@ -19,6 +18,7 @@ directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
 
 raw = mne.io.read_raw_brainvision("20240418_mat5mins/20240418_B98_jikken_0003.vhdr")
+raw.load_data()
 
 # Reconstruct the original events from our Raw object
 events, event_ids = mne.events_from_annotations(raw)
@@ -30,11 +30,18 @@ raw.set_channel_types({'hEOG':'eog'})
 tmin = events[3,0]/fs
 tmax = events[-1,0]/fs
 
+# iir_params = dict(order=2, ftype='butter', output = 'ba')
+# raw_ecg = raw.copy().crop(tmin = tmin, tmax = tmax).pick_types(eeg=False, eog=False, ecg=True).filter(0.5, 150, picks = 'ecg', method ='iir', iir_params = iir_params)
 raw_ecg = raw.copy().crop(tmin = tmin, tmax = tmax).pick_types(eeg=False, eog=False, ecg=True)
 
+
 mne_ecg, mne_time = raw_ecg[:]
-mne_ecg = mne_ecg.T
-mne_ecg = -mne_ecg
+mne_ecg = np.squeeze(-mne_ecg)
+
+b, a = signal.butter(2, [0.5, 150], 'bandpass', output= 'ba', fs=fs)
+filtered = signal.filtfilt(b,a,mne_ecg)
+
+mne_ecg = filtered.copy()
 
 QRS = pan_tompkins_qrs()
 output = QRS.solve(mne_ecg, fs)
@@ -138,3 +145,32 @@ r_peak = new_r_peak.copy()
 result = r_peak.copy()
 rri = r_peak.copy()
 rri[1:] = rri[1:] - rri[:-1]
+
+
+
+####################Bandpassed Signal####################
+b, a = signal.butter(2, [0.5, 150], 'bandpass', fs = fs)
+filtered = signal.filtfilt(b,a,np.squeeze(mne_ecg))
+# filtered = filtered.T
+out_filt = QRS.solve(filtered,fs)
+hr = heart_rate(filtered, fs)
+result_filt = hr.find_r_peaks()
+result_filt = np.array(result_filt)
+
+# Clip the x locations less than 0 (Learning Phase)
+result_filt = result_filt[result_filt > 0]
+
+plt.figure(figsize = (20,4), dpi = 100)
+plt.xticks(np.arange(0, len(mne_ecg)+1, 500))
+plt.plot(filtered, color = 'blue')        
+plt.scatter(result_filt, filtered[result_filt], color = 'red', s = 50, marker= '*')
+# plt.axvline(x = 300000, color = 'r')
+# plt.axvline(x = 600000, color = 'r')
+plt.xlabel('Samples')
+plt.ylabel('mV')
+plt.title("R Peak Locations")
+
+
+######################
+raw_ecg_events,_,_ = mne.preprocessing.find_ecg_events(raw_ecg)
+raw_ecg.plot(events = raw_ecg_events)
