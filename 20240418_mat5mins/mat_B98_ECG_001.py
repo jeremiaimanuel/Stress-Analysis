@@ -30,7 +30,7 @@ raw.set_channel_types({'hEOG':'eog'})
 tmin = events[3,0]/fs
 tmax = events[-1,0]/fs
 
-# iir_params = dict(order=2, ftype='butter', output = 'ba')
+# iir_params = dict(order=2, ftype='butter', output = 'sos')
 # raw_ecg = raw.copy().crop(tmin = tmin, tmax = tmax).pick_types(eeg=False, eog=False, ecg=True).filter(0.5, 150, picks = 'ecg', method ='iir', iir_params = iir_params)
 raw_ecg = raw.copy().crop(tmin = tmin, tmax = tmax).pick_types(eeg=False, eog=False, ecg=True)
 
@@ -122,8 +122,8 @@ result = result[result > 0]
 
 # Plotting the R peak locations in ECG signal
 plt.figure(figsize = (20,4), dpi = 100)
-plt.xticks(np.arange(0, len(mne_ecg)+1, 500))
-plt.plot(mne_ecg, color = 'blue')        
+# plt.xticks(np.arange(0, len(mne_ecg)+1, 500))
+plt.plot(mne_time*fs, mne_ecg, color = 'blue')        
 plt.scatter(result, mne_ecg[result], color = 'red', s = 50, marker= '*')
 # plt.axvline(x = 300000, color = 'r')
 # plt.axvline(x = 600000, color = 'r')
@@ -174,3 +174,14 @@ plt.title("R Peak Locations")
 ######################
 raw_ecg_events,_,_ = mne.preprocessing.find_ecg_events(raw_ecg)
 raw_ecg.plot(events = raw_ecg_events)
+
+
+#################### adding event from the r peak pantompkins
+r_peak_onset = []
+for i in range(len(result)):
+    ons_idx = int(fs*tmin)+result[i]
+    r_peak_onset.append(ons_idx)
+
+r_peak_anot = mne.Annotations(r_peak_onset, 0.1, 'R Peak')
+
+raw_ecg.set_annotations(r_peak_anot)

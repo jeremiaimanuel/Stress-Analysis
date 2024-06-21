@@ -8,15 +8,20 @@ Created on Tue Nov 14 12:43:19 2023
 import mne
 import numpy as np
 import os
+from scipy import signal
 from matplotlib import pyplot as plt
 from pan_tompkins import pan_tompkins_qrs
 from pan_tompkins import heart_rate
+# from pan_tompkins_debug import pan_tompkins_qrs
+# from pan_tompkins_debug import heart_rate
+
 
 fs = 1000
 directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
 
 raw = mne.io.read_raw_brainvision("20231019_B68_stroopv1/20231019_B68_stroopv1_0001.vhdr")
+raw.load_data()
 
 # Reconstruct the original events from our Raw object
 events, event_ids = mne.events_from_annotations(raw)
@@ -28,12 +33,14 @@ raw.set_channel_types({'hEOG':'eog'})
 tmin = events[9,0]/fs
 tmax = events[-1,0]/fs
 
-raw_ecg = raw.crop(tmin = tmin, tmax = tmax).copy().pick_types(eeg=False, eog=False, ecg=True)
+# raw_ecg = raw.crop(tmin = tmin, tmax = tmax).copy().pick_types(eeg=False, eog=False, ecg=True)
+iir_params = dict(order=2, ftype='butter', output = 'sos')
+raw_ecg = raw.copy().crop(tmin = tmin, tmax = tmax).pick_types(eeg=False, eog=False, ecg=True).filter(0.5, 150, picks = 'ecg', method ='iir', iir_params = iir_params)
 
 
 mne_ecg, mne_time = raw_ecg[:]
-mne_ecg = mne_ecg.T
-mne_ecg = -mne_ecg
+mne_ecg = np.squeeze(-mne_ecg)
+# mne_ecg = -mne_ecg.T
 
 QRS = pan_tompkins_qrs()
 output = QRS.solve(mne_ecg, fs)
@@ -42,8 +49,8 @@ der = QRS.derivative(bpass,fs)
 sqr = QRS.squaring(der)
 mwin = QRS.moving_window_integration(sqr, fs)
 
-start_plot = 300
-stop_plot = 3300
+start_plot = 0
+stop_plot = len(mne_ecg)
 
 f, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, 1, sharex = True)
 plt.xticks(np.arange(start_plot,stop_plot, 250))
@@ -112,6 +119,7 @@ result = np.array(result)
 # Clip the x locations less than 0 (Learning Phase)
 result = result[result > 0]
 
+
 # Plotting the R peak locations in ECG signal
 plt.figure(figsize = (20,4), dpi = 100)
 plt.xticks(np.arange(0, len(mne_ecg)+1, 500))
@@ -124,6 +132,55 @@ plt.ylabel('mV')
 plt.title("R Peak Locations")
 
 #r_peak = np.unique(result)
-r_peak = result.copy()
-rri = r_peak.copy()
+# r_peak = result.copy()
+rri = result.copy()
 rri[1:] = rri[1:] - rri[:-1]
+
+
+####################Bandpassed Signal####################
+b, a = signal.butter(2, [0.5, 150], 'bandpass', fs = fs)
+filtered = signal.filtfilt(b,a,np.squeeze(mne_ecg))
+# filtered = filtered.T
+out_filt = QRS.solve(filtered,fs)
+hr = heart_rate(filtered, fs)
+result_filt = hr.find_r_peaks()
+result_filt = np.array(result_filt)
+
+# Clip the x locations less than 0 (Learning Phase)
+result_filt = result_filt[result_filt > 0]
+
+plt.figure(figsize = (20,4), dpi = 100)
+plt.xticks(np.arange(0, len(mne_ecg)+1, 500))
+plt.plot(filtered, color = 'blue')        
+plt.scatter(result_filt, filtered[result_filt], color = 'red', s = 50, marker= '*')
+# plt.axvline(x = 300000, color = 'r')
+# plt.axvline(x = 600000, color = 'r')
+plt.xlabel('Samples')
+plt.ylabel('mV')
+plt.title("R Peak Locations")
+
+
+######################
+# raw_ecg_events,_,_ = mne.preprocessing.find_ecg_events(raw_ecg, qrs_threshold = 0.13)
+
+raw_ecg_events,_,_ = mne.preprocessing.find_ecg_events(raw_ecg, qrs_threshold = 0.13, filter_length = '10s')
+raw_ecg.plot(events = raw_ecg_events)
+
+
+
+#################### adding event from the r peak pantompkins
+r_peak_onset = []
+for i in range(len(result)):
+    ons_idx = int(fs*tmin)+result[i]
+    r_peak_onset.append(ons_idx)
+
+pan_tompkins_events = np.zeros((len(r_peak_onset), 3), dtype=int)
+
+pan_tompkins_events[:, 0] = r_peak_onset
+pan_tompkins_events[:, 1] = 0 
+pan_tompkins_events[:, 2] = 7
+
+raw_ecg.plot(events = pan_tompkins_events)
+
+
+

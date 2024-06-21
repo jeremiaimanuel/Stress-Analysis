@@ -59,16 +59,16 @@ class pan_tompkins_qrs():
             if (n >= 2):
                 y_derived[n] -= x[n-2]
             
-            ###Not sure what this part is for###
+            ###For this part [2x(n+1) + x(n+2)]###
             if (n >= 2 and n <= len(x)-2):
                 y_derived[n] += 2*x[n+1]
             if (n >= 2 and n<= len(x)-3):
                 y_derived[n] += x[n+2]
-            ###Not sure what this part is for###
+            ###For this part [2x(n+1) + x(n+2)]###
 
-            ###Not sure why does it has to be times to "fs"###
+            ###In trasnfer function times 1/T, change to times fs###
             y_derived[n] = (y_derived[n]*fs)/8
-            ###Not sure why does it has to be times to "fs"###
+            ###In trasnfer function times 1/T, change to times fs###
         
         return y_derived
     
@@ -145,8 +145,8 @@ class heart_rate():
     def approx_peak(self):
         slopes = sg.fftconvolve(self.m_win, np.full((25,),1)/25, mode='same')
 
-        for i in range(round(0.5*self.fs) + 1,len(slopes)-1):
-        # for i in range(0,len(slopes)-1):
+        # for i in range(round(0.5*self.fs) + 1,len(slopes)-1):
+        for i in range(0,len(slopes)-1):
             if (slopes[i] > slopes[i-1]) and (slopes[i+1] <slopes[i]):
                 self.peaks.append(i)
 
@@ -314,6 +314,8 @@ class heart_rate():
         # Initialize a window to searchback
         win_200ms = round(0.2*self.fs)
     
+    
+    
         for r_val in self.r_locs:
             
             coord = np.arange(r_val - win_200ms, min(len(self.signal), r_val + win_200ms + 1), 1)
@@ -380,7 +382,7 @@ class heart_rate():
         # Searchback in ECG signal 
         self.ecg_searchback()
 
-        return self.result
+        return np.unique(self.result)
         
     
     
