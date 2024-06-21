@@ -8,19 +8,29 @@ Created on Sat Jan 27 16:10:45 2024
 import mne
 import numpy as np
 import scipy
-from scipy.fft import fft, fftfreq
+import os
+from scipy.fft import fft, fftfreq  
 from matplotlib import pyplot as plt
 from pan_tompkins import pan_tompkins_qrs
 from pan_tompkins import heart_rate
 
 fs = 1000
-raw = mne.io.read_raw_brainvision("20231019_B68_stroopv1_0002.vhdr")
+directory_path = "D:/EEG RESEARCH DATA"
+os.chdir(directory_path)
+
+raw = mne.io.read_raw_brainvision("20231019_B68_stroopv1/20231019_B68_stroopv1_0002.vhdr")
+
+# Reconstruct the original events from our Raw object
+events, event_ids = mne.events_from_annotations(raw)
 
 raw.set_channel_types({'ECG':'ecg'})
 raw.set_channel_types({'vEOG':'eog'})
 raw.set_channel_types({'hEOG':'eog'})
 
-raw_ecg = raw.crop(tmin = 34.047, tmax = 934.062).copy().pick_types(eeg=False, eog=False, ecg=True)
+tmin = events[9,0]/fs
+tmax = events[-1,0]/fs
+
+raw_ecg = raw.crop(tmin = tmin, tmax = tmax).copy().pick_types(eeg=False, eog=False, ecg=True)
 
 mne_ecg, mne_time = raw_ecg[:]
 mne_ecg = -mne_ecg.T
