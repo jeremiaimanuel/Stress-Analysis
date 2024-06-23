@@ -359,12 +359,6 @@ class heart_rate():
             win_300ms = np.arange(max(0, self.peaks[ind] - self.win_150ms), min(self.peaks[ind] + self.win_150ms, len(self.b_pass)-1), 1)
             max_val = max(self.b_pass[win_300ms], default = 0)
             
-            # if ind == 0:
-            #     print('win300ms:', win_300ms)
-            #     print('peak_val:', peak_val)
-            #     print('max_val', max_val)
-            #     print('win_150ms', self.win_150ms)
-            
             # Find the x location of the max peak value
             if (max_val != 0):        
                 x_coord = np.asarray(self.b_pass == max_val).nonzero()
