@@ -10,10 +10,10 @@ import numpy as np
 import os
 from scipy import signal
 from matplotlib import pyplot as plt
-from pan_tompkins import pan_tompkins_qrs
-from pan_tompkins import heart_rate
-# from pan_tompkins_debug import pan_tompkins_qrs
-# from pan_tompkins_debug import heart_rate
+# from pan_tompkins import pan_tompkins_qrs
+# from pan_tompkins import heart_rate
+from pan_tompkins_debug import pan_tompkins_qrs
+from pan_tompkins_debug import heart_rate
 
 
 fs = 1000

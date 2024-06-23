@@ -142,7 +142,7 @@ class heart_rate():
         self.RR_Missed_Limit = 0
         self.RR_Average1 = 0
 
-    def approx_peak(self): ###################### OK################
+    def approx_peak(self): ###################### OK ################
         slopes = sg.fftconvolve(self.m_win, np.full((25,),1)/25, mode='same')
         # slopes = sg.fftconvolve(self.m_win, np.full((25,1),1)/25, mode='same')
         # for i in range(round(0.5*self.fs) + 1,len(slopes)-1):
@@ -151,6 +151,9 @@ class heart_rate():
                 self.peaks.append(i)
         
     def adjust_rr_interval(self, ind):
+        
+        # print('ind:',  ind)
+        
         self.RR1 = np.diff(self.peaks[max(0,ind - 8) : ind + 1])/self.fs  
         
         # print('RR1:',  self.RR1)
@@ -355,11 +358,20 @@ class heart_rate():
             peak_val = self.peaks[ind]
             win_300ms = np.arange(max(0, self.peaks[ind] - self.win_150ms), min(self.peaks[ind] + self.win_150ms, len(self.b_pass)-1), 1)
             max_val = max(self.b_pass[win_300ms], default = 0)
-
+            
+            # if ind == 0:
+            #     print('win300ms:', win_300ms)
+            #     print('peak_val:', peak_val)
+            #     print('max_val', max_val)
+            #     print('win_150ms', self.win_150ms)
+            
             # Find the x location of the max peak value
             if (max_val != 0):        
                 x_coord = np.asarray(self.b_pass == max_val).nonzero()
                 self.probable_peaks.append(x_coord[0][0])
+            # if ind ==0:
+            #     print('x_coord', x_coord)
+            #     print('probable_peaks', self.probable_peaks)
                 
             if (ind < len(self.probable_peaks) and ind != 0):
                 # Adjust RR interval and limits
