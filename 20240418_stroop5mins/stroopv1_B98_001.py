@@ -14,7 +14,7 @@ from mne.preprocessing import ICA, create_ecg_epochs, create_eog_epochs
 directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
 
-raw = mne.io.read_raw_brainvision("20231019_B68_stroopv1/20231019_B68_stroopv1_0001.vhdr")
+raw = mne.io.read_raw_brainvision("20240418_stroop5mins/20240418_B98_jikken_0001.vhdr")
 
 # Reconstruct the original events from our Raw object
 events, event_ids = mne.events_from_annotations(raw)
@@ -26,11 +26,11 @@ raw.set_channel_types({'hEOG':'eog'})
 
 raw.set_montage(montage)
 
-raw_temp = raw.copy().crop(tmin = 39.471, tmax = 939.971) #make a copy
+fs = 1000
+tmin = events[3,0]/fs #Experiment Begin 
+tmax = tmin + 900
 
-# raw_temp1 = raw.copy().crop(tmin = 0, tmax = 2.799)
-# raw_con2 = raw.copy().crop(tmin = 42.271, tmax = 939.971)
-# raw_temp1.append(raw_con2)
+raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax) #make a copy
 
 regexp = r"(ECG|vEOG|hEOG)"
 artifact_picks = mne.pick_channels_regexp(raw_temp.ch_names, regexp=regexp)
@@ -48,6 +48,10 @@ ica.fit(filt_raw)
 ica
 # ica.plot_sources(raw_temp, show_scrollbars=True)
 # ica.plot_components()
+
+########## Save ICA Analysis ##########
+ica.save(fname="20240418_stroop5mins/20240418_B98_jikken_0001-ica.fif", overwrite = True)
+########## Save ICA Analysis ##########
 
 sources = ica.get_sources(raw_temp)
 # sources = raw_temp.copy()

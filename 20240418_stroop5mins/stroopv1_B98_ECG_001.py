@@ -9,6 +9,7 @@ import mne
 import numpy as np
 import scipy
 import os
+from scipy import signal
 from scipy.fft import fft, fftfreq
 from matplotlib import pyplot as plt
 from pan_tompkins import pan_tompkins_qrs
@@ -26,10 +27,13 @@ raw.set_channel_types({'hEOG':'eog'})
 
 raw_ecg = raw.crop(tmin = 52.356, tmax = 943.601).copy().pick_types(eeg=False, eog=False, ecg=True)
 
-
 mne_ecg, mne_time = raw_ecg[:]
-mne_ecg = mne_ecg.T
-mne_ecg = -mne_ecg
+mne_ecg = np.squeeze(-mne_ecg)
+
+# b, a = signal.butter(2, [0.5, 150], 'bandpass', output= 'ba', fs=fs)
+# filtered = signal.filtfilt(b,a,mne_ecg)
+
+# mne_ecg = filtered.copy()
 
 QRS = pan_tompkins_qrs()
 output = QRS.solve(mne_ecg, fs)
@@ -66,36 +70,10 @@ result = np.array(result)
 # Clip the x locations less than 0 (Learning Phase)
 result = result[result > 0]
 
-# Calculate the heart rate
-heartRate = (60*fs)/np.average(np.diff(result[1:]))
-print("Heart Rate",heartRate, "BPM")
-
-# Plotting whole ECG signal
-plt.figure(figsize = (20,4), dpi = 100)
-plt.xticks(np.arange(0,len(mne_ecg)+1, 500))
-plt.plot(mne_ecg[:])
-plt.axvline(x = 300000, color = 'r')
-plt.axvline(x = 600000, color = 'r')
-plt.xlabel('Samples')
-plt.ylabel('mV')
-plt.title("Raw Signal")
-
-# Plotting the R peak locations in ECG signal
-plt.figure(figsize = (20,4), dpi = 100)
-plt.xticks(np.arange(0, len(mne_ecg)+1, 500))
-plt.plot(mne_ecg, color = 'blue')        
-plt.scatter(result, mne_ecg[result], color = 'red', s = 50, marker= '*')
-plt.axvline(x = 300000, color = 'r')
-plt.axvline(x = 600000, color = 'r')
-plt.xlabel('Samples')
-plt.ylabel('mV')
-plt.title("R Peak Locations")
-
-r_peak = np.unique(result)
-
+r_peak = result.copy()
 ###Pre Process, Data Cleaning ECG###
 a = []
-a += [value for value in r_peak if 500 <= value <= 1000 or 604500 <= value <= 605000]
+a += [value for value in r_peak if 500 <= value <= 1000]
 new_r_peak = [value for value in r_peak if value not in a]
 new_r_peak = np.array(new_r_peak)
 
@@ -104,21 +82,51 @@ r_peak = new_r_peak.copy()
 del(a, new_r_peak)
 ###Pre Process, Data Cleaning ECG###
 
-rri = r_peak.copy()
-rri[1:] = rri[1:] - rri[:-1]
+result = r_peak.copy()
+rri = np.diff(result[:])
 
+# # Plotting whole ECG signal
+# plt.figure(figsize = (20,4), dpi = 100)
+# plt.xticks(np.arange(0,len(mne_ecg)+1, 500))
+# plt.plot(mne_ecg[:])
+# plt.axvline(x = 300000, color = 'r')
+# plt.axvline(x = 600000, color = 'r')
+# plt.xlabel('Samples')
+# plt.ylabel('mV')
+# plt.title("Raw Signal")
+
+# Plotting the R peak locations in ECG signal
+plt.figure(figsize = (20,4), dpi = 100)
+plt.xticks(np.arange(0, len(mne_ecg)+1, 500))
+plt.plot(mne_ecg, color = 'blue')        
+plt.scatter(result, mne_ecg[result], color = 'red', s = 50, marker= '*')
+# plt.axvline(x = 300000, color = 'r')
+# plt.axvline(x = 600000, color = 'r')
+plt.xlabel('Samples')
+plt.ylabel('mV')
+plt.title("R Peak Locations")
+
+
+# rri = r_peak.copy()
+# rri[1:] = rri[1:] - rri[:-1]
+
+# Calculate the heart rate
+heartRate = (60*fs)/np.average(rri)
+print("Heart Rate",heartRate, "BPM")
+
+
+exp_duration = (len(mne_ecg) - r_peak[0] - (len(mne_ecg) - r_peak[-1]))/fs  #Tot duration - First Peak - (Tot Duration - Last peak) 
 
 #Interpolated Data
-exp_duration = len(mne_ecg)/fs
-
-x_vals = np.linspace(r_peak[0],r_peak[-1],int(exp_duration*fs))
-splines = scipy.interpolate.splrep(r_peak,rri)
+x_vals = np.linspace(r_peak[1],r_peak[-1],int(exp_duration*fs))
+splines = scipy.interpolate.splrep(r_peak[1:],rri)
 y_vals = scipy.interpolate.splev(x_vals,splines)
 
 plt.figure(figsize = (20,4),dpi = 100)
-plt.plot(x_vals/1000,y_vals)
-plt.axvline(x = 300, color = 'r')
-plt.axvline(x = 600, color = 'r')
+plt.plot(x_vals/fs,y_vals)
+# plt.axvline(x = newseg1, color = 'r')
+# plt.axvline(x = newseg2, color = 'r')
+
 plt.title('Interpolated RRI')
 plt.ylabel('RRI [ms]')
 plt.xlabel('Time [sec]')

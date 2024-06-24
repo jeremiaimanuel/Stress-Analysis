@@ -9,6 +9,7 @@ import mne
 import numpy as np
 import scipy
 import os
+from scipy import signal
 from scipy.fft import fft, fftfreq
 from matplotlib import pyplot as plt
 from pan_tompkins import pan_tompkins_qrs
@@ -30,22 +31,25 @@ raw.set_channel_types({'hEOG':'eog'})
 tmin = events[3,0]/1000
 tmax = events[-1,0]/1000
 
-sgmnt0 = events[3,0]
-sgmnt1 = events[4,0]
-sgmnt2 = events[-2,0]
-sgmnt3 = events[-1,0]
+# sgmnt0 = events[3,0]
+# sgmnt1 = events[4,0]
+# sgmnt2 = events[-2,0]
+# sgmnt3 = events[-1,0]
 
-seg1 = sgmnt1 - sgmnt0
-seg2 = sgmnt2 - sgmnt0
-seg3 = sgmnt3 - sgmnt0
+# seg1 = sgmnt1 - sgmnt0
+# seg2 = sgmnt2 - sgmnt0
+# seg3 = sgmnt3 - sgmnt0
 ### Segment Grouping ###
 
 raw_ecg = raw.copy().pick_types(eeg=False, eog=False, ecg=True).crop(tmin = tmin, tmax = tmax) #make a copy
 
-
 mne_ecg, mne_time = raw_ecg[:]
-mne_ecg = mne_ecg.T
-mne_ecg = -mne_ecg
+mne_ecg = np.squeeze(-mne_ecg)
+
+b, a = signal.butter(2, [0.5, 150], 'bandpass', output= 'ba', fs=fs)
+filtered = signal.filtfilt(b,a,mne_ecg)
+
+mne_ecg = filtered.copy()
 
 QRS = pan_tompkins_qrs()
 output = QRS.solve(mne_ecg, fs)
@@ -125,7 +129,7 @@ result = np.array(result)
 result = result[result > 0]
 
 # Calculate the heart rate
-heartRate = (60*fs)/np.average(np.diff(result[1:]))
+heartRate = (60*fs)/np.average(np.diff(result[:]))
 print("Heart Rate",heartRate, "BPM")
 
 # Plotting whole ECG signal

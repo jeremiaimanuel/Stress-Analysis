@@ -9,6 +9,7 @@ import mne
 import os
 import numpy as np
 import scipy
+from scipy import signal
 from scipy.fft import fft, fftfreq
 from matplotlib import pyplot as plt
 from pan_tompkins import pan_tompkins_qrs
@@ -32,10 +33,13 @@ tmax = events[-1,0]/fs
 
 raw_ecg = raw.copy().crop(tmin = tmin, tmax = tmax).pick_types(eeg=False, eog=False, ecg=True)
 
-
 mne_ecg, mne_time = raw_ecg[:]
-mne_ecg = mne_ecg.T
-mne_ecg = -mne_ecg
+mne_ecg = np.squeeze(-mne_ecg)
+
+b, a = signal.butter(2, [0.5, 150], 'bandpass', output= 'ba', fs=fs)
+filtered = signal.filtfilt(b,a,mne_ecg)
+
+mne_ecg = filtered.copy()
 
 QRS = pan_tompkins_qrs()
 output = QRS.solve(mne_ecg, fs)
@@ -114,8 +118,34 @@ result = np.array(result)
 # Clip the x locations less than 0 (Learning Phase)
 result = result[result > 0]
 
+#r_peak = np.unique(result)
+r_peak = result.copy()
+
+###Pre Process, Data Cleaning ECG###
+a = []
+a += [value for value in r_peak if 478500 <= value <= 479500 or 732000 <= value <= 734000]
+new_r_peak = [value for value in r_peak if value not in a]
+new_r_peak = np.array(new_r_peak)
+
+start_index = np.argmax(new_r_peak >= 731500)
+end_index = np.argmax(new_r_peak > 734000)
+
+new_values = [732441, 733031, 733626] #Manually adding R peak
+
+new_r_peak = np.insert(new_r_peak, [start_index+1, start_index+1, end_index], new_values)
+r_peak = np.sort(new_r_peak)
+
+del(a, start_index, end_index, new_values, new_r_peak)
+###Pre Process, Data Cleaning ECG###
+
+# rri = r_peak.copy()
+# rri[1:] = rri[1:] - rri[:-1]
+
+result = r_peak.copy()
+rri = np.diff(result[:])
+
 # Calculate the heart rate
-heartRate = (60*fs)/np.average(np.diff(result[1:]))
+heartRate = (60*fs)/np.average(rri)
 print("Heart Rate",heartRate, "BPM")
 
 # Plotting whole ECG signal
@@ -138,31 +168,6 @@ plt.scatter(result, mne_ecg[result], color = 'red', s = 50, marker= '*')
 plt.xlabel('Samples')
 plt.ylabel('mV')
 plt.title("R Peak Locations")
-
-#r_peak = np.unique(result)
-r_peak = result.copy()
-
-###Pre Process, Data Cleaning ECG###
-a = []
-a += [value for value in r_peak if 478500 <= value <= 479500 or 732000 <= value <= 734000]
-new_r_peak = [value for value in r_peak if value not in a]
-new_r_peak = np.array(new_r_peak)
-
-start_index = np.argmax(new_r_peak >= 731500)
-end_index = np.argmax(new_r_peak > 734000)
-
-new_values = [732441, 733031, 733626] #Manually adding R peak
-
-new_r_peak = np.insert(new_r_peak, [start_index+1, start_index+1, end_index], new_values)
-r_peak = new_r_peak.copy()
-r_peak = np.sort(r_peak)
-
-del(a, start_index, end_index, new_values, new_r_peak)
-###Pre Process, Data Cleaning ECG###
-
-
-rri = r_peak.copy()
-rri[1:] = rri[1:] - rri[:-1]
 
 
 #Interpolated Data

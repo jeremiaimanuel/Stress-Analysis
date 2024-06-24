@@ -34,7 +34,6 @@ tmax = events[-1,0]/fs
 # raw_ecg = raw.copy().crop(tmin = tmin, tmax = tmax).pick_types(eeg=False, eog=False, ecg=True).filter(0.5, 150, picks = 'ecg', method ='iir', iir_params = iir_params)
 raw_ecg = raw.copy().crop(tmin = tmin, tmax = tmax).pick_types(eeg=False, eog=False, ecg=True)
 
-
 mne_ecg, mne_time = raw_ecg[:]
 mne_ecg = np.squeeze(-mne_ecg)
 
@@ -134,12 +133,9 @@ plt.title("R Peak Locations")
 r_peak = np.unique(result)
 
 ###Pre Process, Data Cleaning ECG###
-a = []
-a += [value for value in r_peak if value <237]
-new_r_peak = [value for value in r_peak if value not in a]
-new_r_peak = np.array(new_r_peak)
 
-r_peak = new_r_peak.copy()
+r_peak = result[result>=237]
+
 ###Pre Process, Data Cleaning ECG###
 
 result = r_peak.copy()

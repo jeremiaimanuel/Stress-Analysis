@@ -50,6 +50,10 @@ ica
 ica.plot_sources(raw_temp, show_scrollbars=True)
 ica.plot_components()
 
+########## Save ICA Analysis ##########
+ica.save(fname="20240129_mat5mins/20240129_mat5mins_001-ica.fif", overwrite = True)
+########## Save ICA Analysis ##########
+
 sources = ica.get_sources(raw_temp)
 # sources = raw_temp.copy()
 heog_data = raw_temp.copy().filter(l_freq = 1, h_freq = 10).get_data(picks=['hEOG'])

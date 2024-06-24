@@ -33,14 +33,18 @@ raw.set_channel_types({'hEOG':'eog'})
 tmin = events[9,0]/fs
 tmax = events[-1,0]/fs
 
-# raw_ecg = raw.crop(tmin = tmin, tmax = tmax).copy().pick_types(eeg=False, eog=False, ecg=True)
-iir_params = dict(order=2, ftype='butter', output = 'sos')
-raw_ecg = raw.copy().crop(tmin = tmin, tmax = tmax).pick_types(eeg=False, eog=False, ecg=True).filter(0.5, 150, picks = 'ecg', method ='iir', iir_params = iir_params)
+raw_ecg = raw.crop(tmin = tmin, tmax = tmax).copy().pick_types(eeg=False, eog=False, ecg=True)
+# iir_params = dict(order=2, ftype='butter', output = 'sos')
+# raw_ecg = raw.copy().crop(tmin = tmin, tmax = tmax).pick_types(eeg=False, eog=False, ecg=True).filter(0.5, 150, picks = 'ecg', method ='iir', iir_params = iir_params)
 
 
 mne_ecg, mne_time = raw_ecg[:]
 mne_ecg = np.squeeze(-mne_ecg)
-# mne_ecg = -mne_ecg.T
+
+b, a = signal.butter(2, [0.5, 150], 'bandpass', output= 'ba', fs=fs)
+filtered = signal.filtfilt(b,a,mne_ecg)
+
+mne_ecg = filtered.copy()
 
 QRS = pan_tompkins_qrs()
 output = QRS.solve(mne_ecg, fs)

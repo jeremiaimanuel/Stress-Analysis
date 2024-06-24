@@ -8,6 +8,7 @@ Created on Tue Nov 14 12:43:19 2023
 import mne
 import numpy as np
 import os
+from scipy import signal
 from matplotlib import pyplot as plt
 from pan_tompkins import pan_tompkins_qrs
 from pan_tompkins import heart_rate
@@ -30,10 +31,14 @@ tmax = events[-1,0]/fs
 
 raw_ecg = raw.copy().crop(tmin = tmin, tmax = tmax).pick_types(eeg=False, eog=False, ecg=True)
 
-
 mne_ecg, mne_time = raw_ecg[:]
-mne_ecg = mne_ecg.T
-mne_ecg = -mne_ecg
+mne_ecg = np.squeeze(-mne_ecg)
+
+b, a = signal.butter(2, [0.5, 150], 'bandpass', output= 'ba', fs=fs)
+filtered = signal.filtfilt(b,a,mne_ecg)
+
+mne_ecg = filtered.copy()
+
 
 QRS = pan_tompkins_qrs()
 output = QRS.solve(mne_ecg, fs)
@@ -125,5 +130,7 @@ plt.title("R Peak Locations")
 
 r_peak = np.unique(result)
 # r_peak = result.copy()
-rri = r_peak.copy()
-rri[1:] = rri[1:] - rri[:-1]
+rri = np.diff(result[:])
+
+heartRate = (60*fs)/np.average(rri)
+print("Heart Rate",heartRate, "BPM")
