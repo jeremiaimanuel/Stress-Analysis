@@ -21,19 +21,30 @@ os.chdir(directory_path)
 
 raw = mne.io.read_raw_brainvision("20240418_stroop5mins/20240418_B98_jikken_0001.vhdr")
 
+# Reconstruct the original events from our Raw object
+events, event_ids = mne.events_from_annotations(raw)
+
 raw.set_channel_types({'ECG':'ecg'})
 raw.set_channel_types({'vEOG':'eog'})
 raw.set_channel_types({'hEOG':'eog'})
 
-raw_ecg = raw.crop(tmin = 52.356, tmax = 943.601).copy().pick_types(eeg=False, eog=False, ecg=True)
+trg0 = events[3,0] #Experiment Begin 
+trg1 = events[4,0] #Task Begin
+trg2 = events[-1,0] #Task End
+trg3 = trg0 + 900000 #Experiment End
+
+tmin = trg0/fs
+tmax = trg3/fs
+
+raw_ecg = raw.copy().crop(tmin = tmin, tmax = tmax).pick_types(eeg=False, eog=False, ecg=True)
 
 mne_ecg, mne_time = raw_ecg[:]
 mne_ecg = np.squeeze(-mne_ecg)
 
-# b, a = signal.butter(2, [0.5, 150], 'bandpass', output= 'ba', fs=fs)
-# filtered = signal.filtfilt(b,a,mne_ecg)
+b, a = signal.butter(2, [0.5, 150], 'bandpass', output= 'ba', fs=fs)
+filtered = signal.filtfilt(b,a,mne_ecg)
 
-# mne_ecg = filtered.copy()
+mne_ecg = filtered.copy()
 
 QRS = pan_tompkins_qrs()
 output = QRS.solve(mne_ecg, fs)
@@ -73,7 +84,7 @@ result = result[result > 0]
 r_peak = result.copy()
 ###Pre Process, Data Cleaning ECG###
 a = []
-a += [value for value in r_peak if 500 <= value <= 1000]
+a += [value for value in r_peak if value <= 288 or 500 <= value <= 1000]
 new_r_peak = [value for value in r_peak if value not in a]
 new_r_peak = np.array(new_r_peak)
 

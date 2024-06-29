@@ -30,7 +30,7 @@ raw.set_channel_types({'vEOG':'eog'})
 raw.set_channel_types({'hEOG':'eog'})
 
 tmin = events[3,0]/fs
-tmax = events[-1,0]/fs
+tmax =  events[-1,0]/fs
 
 raw_ecg = raw.copy().crop(tmin = tmin, tmax = tmax).pick_types(eeg=False, eog=False, ecg=True)
 
@@ -119,6 +119,25 @@ result = np.array(result)
 # Clip the x locations less than 0 (Learning Phase)
 result = result[result > 0]
 
+#####################################################Pre Process, Data Cleaning ECG
+r_peak = np.unique(result) #Remove Duplicate R Peak
+#####################################################Pre Process, Data Cleaning ECG#####################################################
+
+a = []
+a += [value for value in r_peak if 500 <= value <= 1000]
+new_r_peak = [value for value in r_peak if value not in a]
+new_r_peak = np.array(new_r_peak)
+
+r_peak = new_r_peak.copy()
+
+del(a, new_r_peak)
+
+#####################################################Pre Process, Data Cleaning ECG#####################################################
+
+result = r_peak.copy()
+rri = np.diff(result[:])
+
+
 # Calculate the heart rate
 heartRate = (60*fs)/np.average(np.diff(result[1:]))
 print("Heart Rate",heartRate, "BPM")
@@ -138,8 +157,8 @@ plt.figure(figsize = (20,4), dpi = 100)
 plt.xticks(np.arange(0, len(mne_ecg)+1, 500))
 plt.plot(mne_ecg, color = 'blue')        
 plt.scatter(result, mne_ecg[result], color = 'red', s = 50, marker= '*')
-plt.axvline(x = 119904, color = 'r')
-plt.axvline(x = 244786, color = 'r')
+# plt.axvline(x = 119904, color = 'r')
+# plt.axvline(x = 244786, color = 'r')
 plt.xlabel('Samples')
 plt.ylabel('mV')
 plt.title("R Peak Locations")
