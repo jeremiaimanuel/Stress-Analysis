@@ -11,7 +11,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 from mne.preprocessing import ICA, create_ecg_epochs, create_eog_epochs
 
-fs = 1000
 directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
 
@@ -25,11 +24,11 @@ raw.set_channel_types({'ECG':'ecg'})
 raw.set_channel_types({'vEOG':'eog'})
 raw.set_channel_types({'hEOG':'eog'})
 
-
-tmin = events[3,0]/fs
-tmax = events[-1,0]/fs
-
 raw.set_montage(montage)
+
+fs = 1000
+tmin = events[3,0]/fs #Experiment Begin 
+tmax = events[-1,0]/fs #Task Begin
 
 raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax) #make a copy
 
@@ -50,6 +49,10 @@ ica.fit(filt_raw)
 ica
 ica.plot_sources(raw_temp, show_scrollbars=True)
 ica.plot_components()
+
+########## Save ICA Analysis ##########
+ica.save(fname="20240418_mat5mins/20240418_B98_jikken_0003-ica.fif", overwrite = True)
+########## Save ICA Analysis ##########
 
 sources = ica.get_sources(raw_temp)
 # sources = raw_temp.copy()
