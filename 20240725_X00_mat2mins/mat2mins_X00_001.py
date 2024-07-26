@@ -31,6 +31,7 @@ tmin = events[3,0]/fs #Experiment Begin
 tmax = events[-1,0]/fs #Task Begin
 
 raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax) #make a copy
+raw_temp.load_data()
 
 
 regexp = r"(ECG|vEOG|hEOG)"
@@ -47,8 +48,8 @@ filt_raw = raw_temp.load_data().copy().filter(l_freq=1.0, h_freq=None)
 ica = ICA(n_components=32, max_iter="auto", random_state = 95)
 ica.fit(filt_raw)
 ica
-ica.plot_sources(raw_temp, show_scrollbars=True)
-ica.plot_components()
+# ica.plot_sources(raw_temp, show_scrollbars=True)
+# ica.plot_components()
 
 ########## Save ICA Analysis ##########
 ica.save(fname="20240725_X00_mat2mins/20240725_X00_jikken_0004-ica.fif", overwrite = True)

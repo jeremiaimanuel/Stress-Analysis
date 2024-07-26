@@ -134,7 +134,7 @@ r_peak = np.unique(result)
 
 ###Pre Process, Data Cleaning ECG###
 
-r_peak = result[result>=237]
+r_peak = result[result>=250]
 
 ###Pre Process, Data Cleaning ECG###
 
