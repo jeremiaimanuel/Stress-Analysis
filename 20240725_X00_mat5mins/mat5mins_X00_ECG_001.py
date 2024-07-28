@@ -28,7 +28,7 @@ raw.set_channel_types({'vEOG':'eog'})
 raw.set_channel_types({'hEOG':'eog'})
 
 tmin = events[3,0]/fs
-tmax = events[-1,0]/fs
+tmax = events[-3,0]/fs
 
 # iir_params = dict(order=2, ftype='butter', output = 'sos')
 # raw_ecg = raw.copy().crop(tmin = tmin, tmax = tmax).pick_types(eeg=False, eog=False, ecg=True).filter(0.5, 150, picks = 'ecg', method ='iir', iir_params = iir_params)
@@ -134,7 +134,12 @@ r_peak = np.unique(result)
 
 ###Pre Process, Data Cleaning ECG###
 
-r_peak = result[result>=250]
+# r_peak = r_peak[r_peak>=250]
+r_peak = r_peak[(r_peak>=250) & 
+                ~((r_peak >= 295780) & (r_peak <= 295800)) & 
+                ~((r_peak >= 704674) & (r_peak <= 705000)) & 
+                ~((r_peak >= 706000) & (r_peak <= 706500)) & 
+                ~((r_peak >= 706771) & (r_peak <= 707000))]
 
 ###Pre Process, Data Cleaning ECG###
 
