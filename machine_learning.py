@@ -8,7 +8,7 @@ Created on Wed Jul 31 15:31:47 2024
 import mne
 import numpy as np
 import os
-import math
+# import math
 import scipy
 from scipy import signal as sg
 from matplotlib import pyplot as plt
@@ -32,6 +32,7 @@ array_stress = epoch_stress.get_data()
 array_rest2 = epoch_rest2.get_data()
 
 segment_length = array_rest.shape[2] // 8
+
 
 # Initialize an empty list to store the segmented arrays
 segmented_arrays = []
