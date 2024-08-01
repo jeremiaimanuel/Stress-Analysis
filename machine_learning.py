@@ -31,21 +31,22 @@ array_rest = epoch_rest.get_data()
 array_stress = epoch_stress.get_data()
 array_rest2 = epoch_rest2.get_data()
 
-segment_length = array_rest.shape[2] // 8
-
-
+segment_length = array_rest.shape[2] // 10
+ch_length = array_rest.shape[1]
 # Initialize an empty list to store the segmented arrays
-segmented_arrays = []
+segmented_arrays = np.zeros(ch_length, array_rest.shape[2]//segment_length * array_rest.shape[0])
 
 for i in range(array_rest.shape[0]):
-    for j in range(array_rest.shape[1]):
-        segments = [array_rest[i,j, k:k+segment_length] for k in range(0, array_rest.shape[2], segment_length)]
+    data_epoch = array_rest[i]
+    for j in range(len(data_epoch)):
+        segment_index = 0
+        for k in range(0,array_rest.shape[2], segment_length):
+            segment = data_epoch[j, k:k+segment_length]
+            avg_segment = np.average(segment)
+            
+            segmented_arrays[j,i*segment_length+segment_index] = avg_segment
+            segment_index +=1
         
-        avg_segment = np.average(segments)
-        
-        concatenated_segments = np.concatenate(avg_segment)
-        
-        segmented_arrays.append(concatenated_segments)
         
 # Convert the list to a numpy array
 segmented_array = np.array(segmented_arrays)
