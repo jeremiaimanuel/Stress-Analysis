@@ -27,6 +27,10 @@ epoch_rest = mne.read_epochs('20240418_B98_jikken_0003-epoch_first_rest-epo.fif'
 epoch_stress = mne.read_epochs('20240418_B98_jikken_0003-epoch_stress-epo.fif')
 epoch_rest2 = mne.read_epochs('20240418_B98_jikken_0003-epoch_second_rest-epo.fif')
 
+# epoch_rest = epoch_rest.crop(tmin = 0.2, tmax = 0.4)
+# epoch_stress = epoch_stress.crop(tmin = 0.2, tmax = 0.4)
+# epoch_rest2 = epoch_rest2.crop(tmin = 0.2, tmax = 0.4)
+
 prefixes = ["average.ch."]
 
 eeg_ch_names = epoch_rest.ch_names
@@ -71,11 +75,11 @@ label_rest = len(feature_rest) * [0]
 label_stress = len(feature_stress) * [1]
 label_rest2 = len(feature_rest2) * [2]
 
-# feature = np.concatenate((feature_rest, feature_stress, feature_rest2))
-# label = np.concatenate((label_rest, label_stress, label_rest2))
+feature = np.concatenate((feature_rest, feature_stress, feature_rest2))
+label = np.concatenate((label_rest, label_stress, label_rest2))
 
-feature = np.concatenate((feature_rest, feature_stress))
-label = np.concatenate((label_rest, label_stress))
+# feature = np.concatenate((feature_rest, feature_stress))
+# label = np.concatenate((label_rest, label_stress))
 
 features = pd.DataFrame(feature, columns = ch_names)
 labels = pd.DataFrame(label, columns= ['label'])
@@ -139,12 +143,53 @@ print(classification_report(y,y_pred))
 
 ###############################################################################
 
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+
+clf = LinearDiscriminantAnalysis()
+pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
+pipe.fit(X, y)
+
+scores = cross_val_score(pipe, X, y, cv=gkf)
+scores
+
+print("%0.2f accuracy with a standard deviation of %0.2f" % (scores.mean(), scores.std()))
+
+y_pred = pipe.predict(X)
+print(classification_report(y,y_pred))
+
+
+###############################################################################
 import seaborn as sns
 %matplotlib inline
 
 sns.set(style='white', context='notebook', rc={'figure.figsize':(14,10)})
 
 sns.pairplot(df_5features, hue = 'label')
+
+###############################################################################
+
+import umap.umap_ as mp
+import seaborn as sns
+
+reducer = mp.UMAP()
+
+# clf = LinearDiscriminantAnalysis()
+# pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
+
+scaled_data = StandardScaler().fit_transform(X_5)
+# scaled_data = pipe.fit_transform(X_5,y)
+
+embedding = reducer.fit_transform(scaled_data)
+embedding.shape
+
+plt.scatter(
+    embedding[:,0],
+    embedding[:,1],
+    c=[sns.color_palette()[x] for x in df.label])
+plt.legend()
+plt.gca().set_aspect('equal','datalim')
+plt.title('UMAP projection of the Dataset', fontsize=24)
+
 
 # ConfusionMatrixDisplay.from_predictions(y_test, y_pred)
 
