@@ -27,34 +27,126 @@ epoch_rest = mne.read_epochs('20240418_B98_jikken_0003-epoch_first_rest-epo.fif'
 epoch_stress = mne.read_epochs('20240418_B98_jikken_0003-epoch_stress-epo.fif')
 epoch_rest2 = mne.read_epochs('20240418_B98_jikken_0003-epoch_second_rest-epo.fif')
 
+prefixes = ["average.ch."]
+
+eeg_ch_names = epoch_rest.ch_names
+ch_names = []
+for i in prefixes:
+    for j in eeg_ch_names:
+        name = i+j
+        ch_names.append(name)
+
 array_rest = epoch_rest.get_data()
 array_stress = epoch_stress.get_data()
 array_rest2 = epoch_rest2.get_data()
+    
 
-segment_length = array_rest.shape[2] // 10
-ch_length = array_rest.shape[1]
-# Initialize an empty list to store the segmented arrays
-segmented_arrays = np.zeros(ch_length, array_rest.shape[2]//segment_length * array_rest.shape[0])
+def feature_extract(epoch_array, n_segment):
+    
+    n_epoch = epoch_array.shape[0]
+    n_ch = epoch_array.shape[1]
+    n_signal = epoch_array.shape[2]
+    
+    segment_length = n_signal // n_segment
+    
+    segment_array = np.zeros((n_ch, n_segment *n_epoch +1))
+    
+    for i in range(n_epoch):
+        data_epoch = epoch_array[i]
+        for j in range(len(data_epoch)):
+            segment_index = 0
+            for k in range(0,n_signal,segment_length):
+                segment = data_epoch[j, k:k+segment_length]
+                avg_segment = np.average(segment)
+                
+                segment_array[j,segment_index + (n_segment*i)] = avg_segment
+                segment_index +=1
+    return(np.array(segment_array).T)
 
-for i in range(array_rest.shape[0]):
-    data_epoch = array_rest[i]
-    for j in range(len(data_epoch)):
-        segment_index = 0
-        for k in range(0,array_rest.shape[2], segment_length):
-            segment = data_epoch[j, k:k+segment_length]
-            avg_segment = np.average(segment)
-            
-            segmented_arrays[j,i*segment_length+segment_index] = avg_segment
-            segment_index +=1
-        
-        
-# Convert the list to a numpy array
-segmented_array = np.array(segmented_arrays)
+feature_rest = feature_extract(array_rest, 10)
+feature_stress = feature_extract(array_stress, 10)
+feature_rest2 = feature_extract(array_rest2,10)
 
-# Reshape the array to the desired shape
-segmented_array = segmented_array.reshape(array_rest.shape[0], array_rest.shape[1], -1)
+label_rest = len(feature_rest) * [0]
+label_stress = len(feature_stress) * [1]
+label_rest2 = len(feature_rest2) * [2]
 
-print(segmented_array.shape)
+# feature = np.concatenate((feature_rest, feature_stress, feature_rest2))
+# label = np.concatenate((label_rest, label_stress, label_rest2))
+
+feature = np.concatenate((feature_rest, feature_stress))
+label = np.concatenate((label_rest, label_stress))
+
+features = pd.DataFrame(feature, columns = ch_names)
+labels = pd.DataFrame(label, columns= ['label'])
+
+df = labels.join(features)
+display(df)
+
+X = df.filter(like='ch')
+y = df.filter(like='label')
+
+###############################################################################
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import KFold, GridSearchCV
+from sklearn.svm import LinearSVC
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import classification_report
+
+clf = LinearSVC()
+gkf = KFold(5)
+pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
+param_grid={'clf__C':[0.25,0.5,0.75, 1]}
+# param_grid={}
+# gscv = GridSearchCV(pipe, param_grid,cv = gkf,n_jobs = 4)
+
+gscv = GridSearchCV(pipe, param_grid)
+gscv.fit(X, y)
+# gkf.get_n_splits(feature,label)
+scores = cross_val_score(gscv, X, y, cv=gkf)
+scores
+
+print("%0.2f accuracy with a standard deviation of %0.2f" % (scores.mean(), scores.std()))
+
+y_pred = gscv.predict(X)
+print(classification_report(y,y_pred))
+
+###############################################################################
+
+n_features = 5
+X_5 = df.sample(n_features, axis = 1, random_state=99)
+
+df_5features = labels.join(X_5)
+
+clf = LinearSVC()
+gkf = KFold(5)
+pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
+# param_grid={'clf__C':[0.25,0.5,0.75, 1]}
+param_grid={}
+# gscv = GridSearchCV(pipe, param_grid,cv = gkf,n_jobs = 4)
+
+gscv = GridSearchCV(pipe, param_grid, refit=True)
+gscv.fit(X_5, y)
+# gkf.get_n_splits(feature,label)
+scores = cross_val_score(gscv, X_5, y, cv=gkf)
+scores
+
+print("%0.2f accuracy with a standard deviation of %0.2f" % (scores.mean(), scores.std()))
+
+y_pred = gscv.predict(X_5)
+print(classification_report(y,y_pred))
+
+###############################################################################
+
+import seaborn as sns
+%matplotlib inline
+
+sns.set(style='white', context='notebook', rc={'figure.figsize':(14,10)})
+
+sns.pairplot(df_5features, hue = 'label')
+
+# ConfusionMatrixDisplay.from_predictions(y_test, y_pred)
 
 # raw = mne.io.read_raw_brainvision("20240418_mat5mins/20240418_B98_jikken_0003.vhdr")
 
