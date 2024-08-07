@@ -8,14 +8,10 @@ Created on Wed Jul 31 15:31:47 2024
 import mne
 import numpy as np
 import os
-# import math
 import scipy
 from scipy import signal as sg
 from matplotlib import pyplot as plt
-# from mne.preprocessing import ICA, create_ecg_epochs, create_eog_epochs, read_ica
 import pandas as pd
-# from pan_tompkins import pan_tompkins_qrs
-# from pan_tompkins import heart_rate
 
 ###### Load Data ######
 
