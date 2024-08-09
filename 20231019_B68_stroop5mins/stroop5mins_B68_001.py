@@ -15,7 +15,7 @@ fs = 1000
 directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
 
-raw = mne.io.read_raw_brainvision("20231019_B68_stroopv1/20231019_B68_stroopv1_0001.vhdr")
+raw = mne.io.read_raw_brainvision("20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001.vhdr")
 
 # Reconstruct the original events from our Raw object
 events, event_ids = mne.events_from_annotations(raw)
@@ -54,7 +54,7 @@ ica
 # ica.plot_components()
 
 ########## Save ICA Analysis ##########
-ica.save(fname="20231019_B68_stroopv1/20231019_B68_stroopv1_0001-ica.fif", overwrite = True)
+ica.save(fname="20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001-ica.fif", overwrite = True)
 ########## Save ICA Analysis ##########
 
 sources = ica.get_sources(raw_temp)
