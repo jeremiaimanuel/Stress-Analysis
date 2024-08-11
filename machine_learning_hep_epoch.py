@@ -21,9 +21,9 @@ os.chdir(directory_path)
 ##################### Define What I need in here #####################
     
 include_second_rest = False
-segmented = False
+segmented = True
 
-only_twave = False #IF True, better make n_segment = 2, if Flase, n_segment = 8
+only_twave = True #IF True, better make n_segment = 2, if Flase, n_segment = 8
 stats = 'all'
 if only_twave:
     n_segment = 2
