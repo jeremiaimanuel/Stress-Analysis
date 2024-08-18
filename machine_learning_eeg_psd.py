@@ -173,9 +173,20 @@ display(df)
 X = df.filter(like='ch')
 y = np.ravel(df.filter(like='label'))
 
-n_features = 5
-X_5 = df.sample(n_features, axis = 1, random_state=99)
-df_5features = labels.join(X_5)
+X_theta = df.filter(like='ch.theta')
+X_alpha = df.filter(like='ch.alpha')
+X_beta = df.filter(like='ch.beta')
+X_gamma = df.filter(like='ch.gamma')
+
+df_theta = labels.join(X_theta)
+df_alpha = labels.join(X_alpha)
+df_beta = labels.join(X_beta)
+df_gamma = labels.join(X_gamma)
+
+
+# n_features = 5
+# X_5 = df.sample(n_features, axis = 1, random_state=99)
+# df_5features = labels.join(X_5)
 ############################# DATA FRAME FEATURE #############################
 
 ############################## IMPORT ML LIBRARY ##############################
@@ -192,19 +203,25 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
 %matplotlib inline
 
-sns.set(style='white', context='notebook', rc={'figure.figsize':(14,10)})
+# sns.set(style='white', context='notebook', rc={'figure.figsize':(14,10)})
+sns.set(style='white', context='notebook', rc={'figure.figsize':(54,50)})
 
-sns.pairplot(df_5features, hue = 'label',palette= "tab10")
+# sns.pairplot(df_5features, hue = 'label',palette= "tab10")
+sns.pairplot(df_theta, hue = 'label',palette= "tab10")
+sns.pairplot(df_alpha, hue = 'label',palette= "tab10")
+sns.pairplot(df_beta, hue = 'label',palette= "tab10")
+sns.pairplot(df_gamma, hue = 'label',palette= "tab10")
 
 import umap.umap_ as mp
-import seaborn as sns
 
 reducer = mp.UMAP()
-scaled_data = StandardScaler().fit_transform(X_5)
+scaled_data = StandardScaler().fit_transform(X)
 embedding = reducer.fit_transform(scaled_data)
 embedding.shape
 
 unique_label = df.label.unique()
+
+sns.set(style='white', context='notebook', rc={'figure.figsize':(14,10)})
 
 fig, ax = plt.subplots()
 scatter = ax.scatter(
