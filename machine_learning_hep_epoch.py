@@ -180,6 +180,7 @@ df_5features = labels.join(X_5)
 
 X = df.filter(like='ch')
 y = np.ravel(df.filter(like='label'))
+# y = df.filter(like='label')
 
 ###############################################################################
 from sklearn.pipeline import Pipeline
@@ -188,7 +189,7 @@ from sklearn.model_selection import KFold, GridSearchCV
 from sklearn.svm import LinearSVC
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import classification_report, roc_auc_score
-    from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 ###############################################################################
 
 import seaborn as sns
@@ -205,11 +206,7 @@ import seaborn as sns
 
 reducer = mp.UMAP()
 
-# clf = LinearDiscriminantAnalysis()
-# pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
-
 scaled_data = StandardScaler().fit_transform(X)
-# scaled_data = pipe.fit_transform(X_5,y)
 
 embedding = reducer.fit_transform(scaled_data)
 embedding.shape
@@ -241,19 +238,35 @@ plt.title('UMAP projection of the Dataset', fontsize=24)
 clf = LinearDiscriminantAnalysis()
 gkf = KFold(5)
 pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
-param_grid={}
-gscv = GridSearchCV(pipe, param_grid, refit=True)
-gscv.fit(X, y)
+pipe.fit(X,y)
 
-scores = cross_val_score(gscv, X, y, cv=gkf)
+scores = cross_val_score(pipe, X, y, cv=gkf)
 print(scores)
 
 print("%0.2f accuracy with a standard deviation of %0.2f" % (scores.mean(), scores.std()))
 
-y_pred = gscv.predict(X)
+y_pred = pipe.predict(X)
 print(classification_report(y,y_pred))
 
-print("ROC AUC Score: ", roc_auc_score(y, gscv.predict_proba(X)[:, 1]))
+print("ROC AUC Score: ", roc_auc_score(y, pipe.predict_proba(X)[:, 1]))
+#######Plot LDA#######
+
+X_r2 = pipe.fit_transform(X,y)
+plt.figure()
+if include_second_rest:
+    for i in np.unique(y):
+        plt.scatter(X_r2[y == i, 0], X_r2[y == i, 1], alpha=.8, label=f'Class {i}')
+    plt.legend(loc='best', shadow=False, scatterpoints=1)
+    plt.title('LDA of dataset with 3 classes')
+else:
+    for i in np.unique(y):
+        plt.scatter(X_r2[y == i], np.zeros_like(X_r2[y == i]), alpha=.8, label=f'Class {i}')
+    plt.legend(loc='best', shadow=False)
+    plt.yticks([])  # No need for y-axis ticks in 1D plot
+    plt.title('LDA of dataset with 2 classes')
+plt.xlabel('Linear Discriminant')
+plt.show()
+
 
 # ###############################################################################
 
