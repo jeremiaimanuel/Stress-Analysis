@@ -262,4 +262,5 @@ print("%0.2f accuracy with a standard deviation of %0.2f" % (scores.mean(), scor
 y_pred = cross_val_predict(gscv, X,y, cv=gkf)
 print(classification_report(y,y_pred))
 
+print("ROC AUC Score: ", roc_auc_score(y, gscv.predict_proba(X)[:, 1]))
 ################################ CLASSIFICATION ################################

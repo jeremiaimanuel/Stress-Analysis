@@ -23,7 +23,7 @@ os.chdir(directory_path)
 include_second_rest = False
 segmented = True
 
-only_twave = True #IF True, better make n_segment = 2, if Flase, n_segment = 8
+only_twave = False #IF True, better make n_segment = 2, if Flase, n_segment = 8
 stats = 'all'
 if only_twave:
     n_segment = 2
@@ -187,8 +187,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import KFold, GridSearchCV
 from sklearn.svm import LinearSVC
 from sklearn.model_selection import cross_val_score
-from sklearn.metrics import classification_report
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.metrics import classification_report, roc_auc_score
+    from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 ###############################################################################
 
 import seaborn as sns
@@ -237,14 +237,6 @@ plt.gca().set_aspect('equal', 'datalim')
 plt.title('UMAP projection of the Dataset', fontsize=24)
 
 ###############################################################################
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import KFold, GridSearchCV
-from sklearn.svm import LinearSVC
-from sklearn.model_selection import cross_val_score
-from sklearn.metrics import classification_report
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-###############################################################################
 
 clf = LinearDiscriminantAnalysis()
 gkf = KFold(5)
@@ -260,6 +252,8 @@ print("%0.2f accuracy with a standard deviation of %0.2f" % (scores.mean(), scor
 
 y_pred = gscv.predict(X)
 print(classification_report(y,y_pred))
+
+print("ROC AUC Score: ", roc_auc_score(y, gscv.predict_proba(X)[:, 1]))
 
 # ###############################################################################
 
