@@ -23,7 +23,7 @@ os.chdir(directory_path)
 include_second_rest = False
 segmented = True
 
-only_twave = False #IF True, better make n_segment = 2, if Flase, n_segment = 8
+only_twave = True #IF True, better make n_segment = 2, if Flase, n_segment = 8
 stats = 'all'
 if only_twave:
     n_segment = 2
@@ -196,7 +196,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import KFold, GridSearchCV
 from sklearn.svm import LinearSVC
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_score, cross_val_predict
 from sklearn.metrics import classification_report, roc_auc_score
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 ###############################################################################
@@ -214,7 +214,7 @@ sns.pairplot(df_5features, hue = 'status', palette= "tab10")
 import umap.umap_ as mp
 import seaborn as sns
 
-reducer = mp.UMAP()
+reducer = mp.UMAP(n_neighbors=15, min_dist=0.1)
 
 scaled_data = StandardScaler().fit_transform(X)
 
@@ -250,7 +250,7 @@ plt.title('UMAP projection of the Dataset', fontsize=24)
 ###############################################################################
 
 clf = LinearDiscriminantAnalysis()
-gkf = KFold(5)
+gkf = KFold(n_splits=5, shuffle=True, random_state=42)
 pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
 pipe.fit(X,y)
 
@@ -259,11 +259,11 @@ print(scores)
 
 print("%0.2f accuracy with a standard deviation of %0.2f" % (scores.mean(), scores.std()))
 
-y_pred = pipe.predict(X)
+y_pred = cross_val_predict(pipe, X,y, cv=gkf)
 print(classification_report(y,y_pred))
 
 #######Check ROC AUC Score#######
-# print("ROC AUC Score: ", roc_auc_score(y, pipe.predict_proba(X)[:, 1]))
+print("ROC AUC Score: ", roc_auc_score(y, pipe.predict_proba(X)[:, 1]))
 #######Check ROC AUC Score#######
 
 #######Plot LDA#######

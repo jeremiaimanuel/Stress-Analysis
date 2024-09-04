@@ -193,9 +193,9 @@ df_beta = labels.join(X_beta)
 df_gamma = labels.join(X_gamma)
 
 
-# n_features = 5
-# X_5 = df.sample(n_features, axis = 1, random_state=99)
-# df_5features = labels_str.join(X_5)
+n_features = 5
+X_5 = df.sample(n_features, axis = 1, random_state=99)
+df_5features = labels_str.join(X_5)
 ############################# DATA FRAME FEATURE #############################
 
 ############################## IMPORT ML LIBRARY ##############################
@@ -204,7 +204,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import KFold, GridSearchCV
 from sklearn.svm import LinearSVC
 from sklearn.model_selection import cross_val_score, cross_val_predict
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, roc_auc_score
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 ############################## IMPORT ML LIBRARY ##############################
 
@@ -278,7 +278,7 @@ print("ROC AUC Score: ", roc_auc_score(y, pipe.predict_proba(X)[:, 1]))
 X_r2 = pipe.fit_transform(X,y)
 # lbl = ['Rest 1', 'Stress', 'Rest 2']
 plt.figure()
-if include_second_rest:
+if second_rest:
     for i in np.unique(y):
         plt.scatter(X_r2[y == i, 0], X_r2[y == i, 1], alpha=.8, label=unique_label[i])
     plt.legend(loc='best', shadow=False, scatterpoints=1)
