@@ -154,20 +154,29 @@ label_rest = len(data_list_rest[0]) * [0]
 label_stress = len(data_list_stress[0]) * [1]
 label_rest2 = len(data_list_rest2[0]) * [2]
 
+label_str_rest = len(data_list_rest[0]) * ['Rest 1']
+label_str_stress = len(data_list_stress[0]) * ['Stress']
+label_str_rest2 = len(data_list_rest2[0]) * ['Rest 2']
+
 if second_rest:
     feature = np.concatenate((data_list_rest,data_list_stress, data_list_rest2), axis = 1)
     label = np.concatenate((label_rest, label_stress, label_rest2))
+    label_str = np.concatenate((label_str_rest, label_str_stress, label_str_rest2))
     feature = feature.T
 else:
     feature = np.concatenate((data_list_rest,data_list_stress), axis = 1)
     label = np.concatenate((label_rest, label_stress))
+    label_str = np.concatenate((label_str_rest, label_str_stress))    
+
     feature = feature.T
 
 ############################# DATA FRAME FEATURE #############################
 features = pd.DataFrame(feature, columns = new_eeg_ch_names)
 labels = pd.DataFrame(label, columns= ['label'])
+labels_str = pd.DataFrame(label_str, columns=['status'])
 
-df = labels.join(features)
+df_labels = labels.join(labels_str)
+df = df_labels.join(features)
 display(df)
 
 X = df.filter(like='ch')
@@ -186,7 +195,7 @@ df_gamma = labels.join(X_gamma)
 
 # n_features = 5
 # X_5 = df.sample(n_features, axis = 1, random_state=99)
-# df_5features = labels.join(X_5)
+# df_5features = labels_str.join(X_5)
 ############################# DATA FRAME FEATURE #############################
 
 ############################## IMPORT ML LIBRARY ##############################
@@ -206,11 +215,11 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 # sns.set(style='white', context='notebook', rc={'figure.figsize':(14,10)})
 sns.set(style='white', context='notebook', rc={'figure.figsize':(54,50)})
 
-# sns.pairplot(df_5features, hue = 'label',palette= "tab10")
-sns.pairplot(df_theta, hue = 'label',palette= "tab10")
-sns.pairplot(df_alpha, hue = 'label',palette= "tab10")
-sns.pairplot(df_beta, hue = 'label',palette= "tab10")
-sns.pairplot(df_gamma, hue = 'label',palette= "tab10")
+sns.pairplot(df_5features, hue = 'status',palette= "tab10")
+# sns.pairplot(df_theta, hue = 'status',palette= "tab10")
+# sns.pairplot(df_alpha, hue = 'status',palette= "tab10")
+# sns.pairplot(df_beta, hue = 'status',palette= "tab10")
+# sns.pairplot(df_gamma, hue = 'status',palette= "tab10")
 
 import umap.umap_ as mp
 
@@ -219,7 +228,7 @@ scaled_data = StandardScaler().fit_transform(X)
 embedding = reducer.fit_transform(scaled_data)
 embedding.shape
 
-unique_label = df.label.unique()
+unique_label = df.status.unique()
 
 sns.set(style='white', context='notebook', rc={'figure.figsize':(14,10)})
 
@@ -250,17 +259,38 @@ plt.title('UMAP projection of the Dataset', fontsize=24)
 clf = LinearDiscriminantAnalysis()
 gkf = KFold(5)
 pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
-param_grid={}
-gscv = GridSearchCV(pipe, param_grid, refit=True)
-gscv.fit(X, y)
+# param_grid={}
+# gscv = GridSearchCV(pipe, param_grid, refit=True)
+# gscv.fit(X, y)
+pipe.fit(X,y)
 
-scores = cross_val_score(gscv, X, y, cv=gkf)
+scores = cross_val_score(pipe, X, y, cv=gkf)
 print(scores)
 
 print("%0.2f accuracy with a standard deviation of %0.2f" % (scores.mean(), scores.std()))
 
-y_pred = cross_val_predict(gscv, X,y, cv=gkf)
+y_pred = cross_val_predict(pipe, X,y, cv=gkf)
 print(classification_report(y,y_pred))
 
-print("ROC AUC Score: ", roc_auc_score(y, gscv.predict_proba(X)[:, 1]))
+print("ROC AUC Score: ", roc_auc_score(y, pipe.predict_proba(X)[:, 1]))
+
+#######Plot LDA#######
+X_r2 = pipe.fit_transform(X,y)
+# lbl = ['Rest 1', 'Stress', 'Rest 2']
+plt.figure()
+if include_second_rest:
+    for i in np.unique(y):
+        plt.scatter(X_r2[y == i, 0], X_r2[y == i, 1], alpha=.8, label=unique_label[i])
+    plt.legend(loc='best', shadow=False, scatterpoints=1)
+    plt.title('LDA of dataset with 3 classes')
+else:
+    for i in np.unique(y):
+        plt.scatter(X_r2[y == i], np.zeros_like(X_r2[y == i]), alpha=.8, label=unique_label[i])
+    plt.legend(loc='best', shadow=False)
+    plt.yticks([])  # No need for y-axis ticks in 1D plot
+    plt.title('LDA of dataset with 2 classes')
+plt.xlabel('Linear Discriminant')
+plt.show()
+#######Plot LDA#######
+
 ################################ CLASSIFICATION ################################

@@ -159,24 +159,33 @@ label_rest = len(feature_rest) * [0]
 label_stress = len(feature_stress) * [1]
 label_rest2 = len(feature_rest2) * [2]
 
+label_str_rest = len(feature_rest) * ['Rest 1']
+label_str_stress = len(feature_stress) * ['Stress']
+label_str_rest2 = len(feature_rest2) * ['Rest 2']
+
+
 if include_second_rest == True:
     feature = np.concatenate((feature_rest, feature_stress, feature_rest2))
     label = np.concatenate((label_rest, label_stress, label_rest2))
+    label_str = np.concatenate((label_str_rest, label_str_stress, label_str_rest2))
 else:
     feature = np.concatenate((feature_rest, feature_stress))
-    label = np.concatenate((label_rest, label_stress))    
+    label = np.concatenate((label_rest, label_stress))
+    label_str = np.concatenate((label_str_rest, label_str_stress))    
 
 ch_names = ch_name_extract(epoch_rest, stats)
 
 features = pd.DataFrame(feature, columns = ch_names)
 labels = pd.DataFrame(label, columns= ['label'])
+labels_str = pd.DataFrame(label_str, columns=['status'])
 
-df = labels.join(features)
+df_labels = labels.join(labels_str)
+df = df_labels.join(features)
 display(df)
 
 n_features = 5
 X_5 = df.sample(n_features, axis = 1, random_state=99)
-df_5features = labels.join(X_5)
+df_5features = labels_str.join(X_5)
 
 X = df.filter(like='ch')
 y = np.ravel(df.filter(like='label'))
@@ -197,7 +206,8 @@ import seaborn as sns
 
 sns.set(style='white', context='notebook', rc={'figure.figsize':(14,10)})
 
-sns.pairplot(df_5features, hue = 'label', palette= "tab10")
+# sns.pairplot(df_5features, hue = 'label', palette= "tab10")
+sns.pairplot(df_5features, hue = 'status', palette= "tab10")
 
 ###############################################################################
 
@@ -211,7 +221,11 @@ scaled_data = StandardScaler().fit_transform(X)
 embedding = reducer.fit_transform(scaled_data)
 embedding.shape
 
-unique_label = df.label.unique()
+# lbl = ['Rest 1', 'Stress']
+
+# if include_second_rest:
+#     lbl = ['Rest 1', 'Stress', 'Rest 2']
+unique_label = df.status.unique()
 
 fig, ax = plt.subplots()
 scatter = ax.scatter(
@@ -248,25 +262,28 @@ print("%0.2f accuracy with a standard deviation of %0.2f" % (scores.mean(), scor
 y_pred = pipe.predict(X)
 print(classification_report(y,y_pred))
 
-print("ROC AUC Score: ", roc_auc_score(y, pipe.predict_proba(X)[:, 1]))
-#######Plot LDA#######
+#######Check ROC AUC Score#######
+# print("ROC AUC Score: ", roc_auc_score(y, pipe.predict_proba(X)[:, 1]))
+#######Check ROC AUC Score#######
 
+#######Plot LDA#######
 X_r2 = pipe.fit_transform(X,y)
+# lbl = ['Rest 1', 'Stress', 'Rest 2']
 plt.figure()
 if include_second_rest:
     for i in np.unique(y):
-        plt.scatter(X_r2[y == i, 0], X_r2[y == i, 1], alpha=.8, label=f'Class {i}')
+        plt.scatter(X_r2[y == i, 0], X_r2[y == i, 1], alpha=.8, label=unique_label[i])
     plt.legend(loc='best', shadow=False, scatterpoints=1)
     plt.title('LDA of dataset with 3 classes')
 else:
     for i in np.unique(y):
-        plt.scatter(X_r2[y == i], np.zeros_like(X_r2[y == i]), alpha=.8, label=f'Class {i}')
+        plt.scatter(X_r2[y == i], np.zeros_like(X_r2[y == i]), alpha=.8, label=unique_label[i])
     plt.legend(loc='best', shadow=False)
     plt.yticks([])  # No need for y-axis ticks in 1D plot
     plt.title('LDA of dataset with 2 classes')
 plt.xlabel('Linear Discriminant')
 plt.show()
-
+#######Plot LDA#######
 
 # ###############################################################################
 
