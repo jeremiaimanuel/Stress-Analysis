@@ -214,17 +214,14 @@ sns.pairplot(df_5features, hue = 'status', palette= "tab10")
 import umap.umap_ as mp
 import seaborn as sns
 
-reducer = mp.UMAP(n_neighbors=15, min_dist=0.1)
+reducer = mp.UMAP()
+# reducer = mp.UMAP(n_neighbors=15, min_dist=0.1)
 
 scaled_data = StandardScaler().fit_transform(X)
 
 embedding = reducer.fit_transform(scaled_data)
 embedding.shape
 
-# lbl = ['Rest 1', 'Stress']
-
-# if include_second_rest:
-#     lbl = ['Rest 1', 'Stress', 'Rest 2']
 unique_label = df.status.unique()
 
 fig, ax = plt.subplots()
@@ -251,6 +248,7 @@ plt.title('UMAP projection of the Dataset', fontsize=24)
 
 clf = LinearDiscriminantAnalysis()
 gkf = KFold(n_splits=5, shuffle=True, random_state=42)
+# gkf = KFold(n_splits=5)
 pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
 pipe.fit(X,y)
 
