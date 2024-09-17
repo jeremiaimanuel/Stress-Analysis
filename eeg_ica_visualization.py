@@ -14,7 +14,26 @@ from mne.preprocessing import ICA, create_ecg_epochs, create_eog_epochs
 directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
 
-raw = mne.io.read_raw_brainvision(".....")
+####### List of Path ######
+path = ['20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001.vhdr',
+        '20240129_B71_mat5mins/20240129_B71_mat5mins_001.vhdr',
+        '20240129_B71_stroop5mins/20240129_B71_stroop5mins_0002.vhdr',
+        '20240418_B98_mat2mins/20240418_B98_jikken_0004.vhdr',
+        '20240418_B98_mat5mins/20240418_B98_jikken_0003.vhdr',
+        '20240418_B98_stroop2mins/20240418_B98_jikken_0002.vhdr',
+        '20240418_B98_stroop5mins/20240418_B98_jikken_0001.vhdr',
+        '20240725_X00_mat2mins/20240725_X00_jikken_0004.vhdr',
+        '20240725_X00_mat5mins/20240725_X00_jikken_0003.vhdr',
+        '20240725_X00_stroop2mins/20240725_X00_jikken_0002.vhdr',
+        '20240725_X00_stroop5mins/20240725_X00_jikken_0001.vhdr']
+####### List of Path ######
+
+files = {number: path[number] for number in range(len(path))}
+
+print(files)
+file_number = int(input("Choose File: "))
+
+raw = mne.io.read_raw_brainvision(path[file_number], preload = True)
 
 # Reconstruct the original events from our Raw object
 events, event_ids = mne.events_from_annotations(raw)
@@ -30,8 +49,8 @@ fs = 1000
 tmin = events[3,0]/fs #Experiment Begin 
 tmax = events[-1,0]/fs #Task Begin
 
-raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax) #make a copy
-
+# raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax).apply_function(lambda x: -x, picks='ECG') #make a copy
+raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax).pick(['eeg', 'ecg']).apply_function(lambda x: -x, picks='ECG') #Without EOG
 
 regexp = r"(ECG|vEOG|hEOG)"
 artifact_picks = mne.pick_channels_regexp(raw_temp.ch_names, regexp=regexp)
@@ -51,7 +70,7 @@ ica.plot_sources(raw_temp, show_scrollbars=True)
 ica.plot_components()
 
 ########## Save ICA Analysis ##########
-ica.save(fname="20240418_mat5mins/20240418_B98_jikken_0003-ica.fif", overwrite = True)
+# ica.save(fname=files[file_number].replace(".vhdr", "-ica.fif"), overwrite = True)
 ########## Save ICA Analysis ##########
 
 sources = ica.get_sources(raw_temp)
