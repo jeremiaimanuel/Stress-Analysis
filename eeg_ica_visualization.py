@@ -11,6 +11,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from mne.preprocessing import ICA, create_ecg_epochs, create_eog_epochs
 
+# from mne_icalabel import label_components
+
 directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
 
@@ -49,8 +51,8 @@ fs = 1000
 tmin = events[3,0]/fs #Experiment Begin 
 tmax = events[-1,0]/fs #Task Begin
 
-# raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax).apply_function(lambda x: -x, picks='ECG') #make a copy
-raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax).pick(['eeg', 'ecg']).apply_function(lambda x: -x, picks='ECG') #Without EOG
+raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax).apply_function(lambda x: -x, picks='ECG') #make a copy
+# raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax).pick(['eeg', 'ecg']).apply_function(lambda x: -x, picks='ECG') #Without EOG
 
 regexp = r"(ECG|vEOG|hEOG)"
 artifact_picks = mne.pick_channels_regexp(raw_temp.ch_names, regexp=regexp)
@@ -69,8 +71,18 @@ ica
 ica.plot_sources(raw_temp, show_scrollbars=True)
 ica.plot_components()
 
+########## Labeling IC Components ##########
+# ic_labels = label_components(filt_raw, ica, method="iclabel")
+# print(ic_labels["labels"])
+
+## exclude_idx = [
+##     idx for idx, label in enumerate(labels) if label not in ["brain", "other"]
+## ]
+## print(f"Excluding these ICA components: {exclude_idx}")
+########## Labeling IC Components ##########
+
 ########## Save ICA Analysis ##########
-# ica.save(fname=files[file_number].replace(".vhdr", "-ica.fif"), overwrite = True)
+ica.save(fname=files[file_number].replace(".vhdr", "-ica.fif"), overwrite = True)
 ########## Save ICA Analysis ##########
 
 sources = ica.get_sources(raw_temp)
