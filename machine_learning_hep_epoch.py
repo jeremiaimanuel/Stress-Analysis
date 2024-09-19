@@ -23,7 +23,7 @@ os.chdir(directory_path)
 include_second_rest = False
 segmented = True
 
-only_twave = True #IF True, better make n_segment = 2, if Flase, n_segment = 8
+only_twave = False #IF True, better make n_segment = 2, if Flase, n_segment = 8
 stats = 'all'
 if only_twave:
     n_segment = 2
@@ -247,8 +247,8 @@ plt.title('UMAP projection of the Dataset', fontsize=24)
 ###############################################################################
 
 clf = LinearDiscriminantAnalysis()
-gkf = KFold(n_splits=5, shuffle=True, random_state=42)
-# gkf = KFold(n_splits=5)
+# gkf = KFold(n_splits=5, shuffle=True, random_state=42)
+gkf = KFold(n_splits=5)
 pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
 pipe.fit(X,y)
 

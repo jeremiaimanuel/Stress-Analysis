@@ -257,8 +257,8 @@ plt.title('UMAP projection of the Dataset', fontsize=24)
 ################################ CLASSIFICATION ################################
 
 clf = LinearDiscriminantAnalysis()
-gkf = KFold(n_splits = 5, shuffle=True, random_state=42)
-# gkf = KFold(n_splits = 5)
+# gkf = KFold(n_splits = 5, shuffle=True, random_state=42)
+gkf = KFold(n_splits = 5)
 pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
 # param_grid={}
 # gscv = GridSearchCV(pipe, param_grid, refit=True)
