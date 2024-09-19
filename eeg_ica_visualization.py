@@ -11,7 +11,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from mne.preprocessing import ICA, create_ecg_epochs, create_eog_epochs
 
-# from mne_icalabel import label_components
+from mne_icalabel import label_components
 
 directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
