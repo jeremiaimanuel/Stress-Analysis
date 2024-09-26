@@ -37,7 +37,10 @@ raw_ecg = raw.copy().crop(tmin = tmin, tmax = tmax).pick_types(eeg=False, eog=Fa
 mne_ecg, mne_time = raw_ecg[:]
 mne_ecg = np.squeeze(-mne_ecg)
 
-b, a = signal.butter(2, [0.5, 150], 'bandpass', output= 'ba', fs=fs)
+# b, a = signal.butter(2, [0.5, 150], 'bandpass', output= 'ba', fs=fs)
+# filtered = signal.filtfilt(b,a,mne_ecg)
+
+b, a = signal.butter(2, [1, 40], 'bandpass', output= 'ba', fs=fs) ## only need to remove the very first noise peak
 filtered = signal.filtfilt(b,a,mne_ecg)
 
 mne_ecg = filtered.copy()

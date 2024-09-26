@@ -18,8 +18,7 @@ os.chdir(directory_path)
 
 ####### List of Path ######
 path = ['20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001.vhdr',
-        '20240129_B71_mat5mins/20240129_B71_mat5mins_001.vhdr',
-        '20240129_B71_stroop5mins/20240129_B71_stroop5mins_0002.vhdr',
+        '20240129_B71_mat5mins/20240129_B71_mat5mins_0001.vhdr',
         '20240418_B98_mat2mins/20240418_B98_jikken_0004.vhdr',
         '20240418_B98_mat5mins/20240418_B98_jikken_0003.vhdr',
         '20240418_B98_stroop2mins/20240418_B98_jikken_0002.vhdr',
@@ -29,6 +28,60 @@ path = ['20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001.vhdr',
         '20240725_X00_stroop2mins/20240725_X00_jikken_0002.vhdr',
         '20240725_X00_stroop5mins/20240725_X00_jikken_0001.vhdr']
 ####### List of Path ######
+
+######################################### Save ICA Function #########################################
+def save_ica(directory):
+        
+    raw = mne.io.read_raw_brainvision(directory, preload = True)
+    # raw = mne.io.read_raw_brainvision(path[file_number], preload = True)
+    
+    # Reconstruct the original events from our Raw object
+    events, event_ids = mne.events_from_annotations(raw)
+    
+    montage = mne.channels.make_standard_montage('standard_1020')
+    raw.set_channel_types({'ECG':'ecg'})
+    raw.set_channel_types({'vEOG':'eog'})
+    raw.set_channel_types({'hEOG':'eog'})
+    
+    raw.set_montage(montage)
+    
+    fs = 1000
+    tmin = events[3,0]/fs #Experiment Begin 
+    tmax = events[-1,0]/fs #Task Begin
+    
+    if directory == "20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001.vhdr":
+        tmin = events[9,0]/fs
+    if directory == '20240725_X00_mat5mins/20240725_X00_jikken_0003.vhdr':
+        tmax = events[-2,0]/fs
+    if directory == '20240725_X00_stroop5mins/20240725_X00_jikken_0001.vhdr':
+        tmax = events[-2,0]/fs
+    if directory == '20240418_B98_stroop5mins/20240418_B98_jikken_0001.vhdr':
+        tmax = tmin + 900
+        
+    raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax).apply_function(lambda x: -x, picks='ECG') #make a copy
+    
+    filt_raw = raw_temp.load_data().copy().filter(l_freq=1.0, h_freq=None)
+    
+    ica = ICA(n_components=32, max_iter="auto", random_state = 95)
+    ica.fit(filt_raw)
+    ica
+    
+    ########## Labeling IC Components ##########
+    # ic_labels = label_components(filt_raw, ica, method="iclabel")
+    # print(ic_labels["labels"])
+    
+    ## exclude_idx = [
+    ##     idx for idx, label in enumerate(labels) if label not in ["brain", "other"]
+    ## ]
+    ## print(f"Excluding these ICA components: {exclude_idx}")
+    ########## Labeling IC Components ##########
+    
+    ########## Save ICA Analysis ##########
+    ica.save(fname=directory.replace(".vhdr", "-ica.fif"), overwrite = True)
+    ########## Save ICA Analysis ##########
+
+
+######################################### Save ICA Function #########################################
 
 files = {number: path[number] for number in range(len(path))}
 

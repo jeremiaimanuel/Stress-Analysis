@@ -17,7 +17,7 @@ fs = 1000
 directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
 
-raw = mne.io.read_raw_brainvision("20240418_mat5mins/20240418_B98_jikken_0003.vhdr")
+raw = mne.io.read_raw_brainvision("20240418_B98_mat5mins/20240418_B98_jikken_0003.vhdr")
 raw.load_data()
 
 # Reconstruct the original events from our Raw object
