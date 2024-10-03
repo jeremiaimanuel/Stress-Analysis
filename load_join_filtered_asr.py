@@ -23,7 +23,11 @@ for i in os.listdir(fpath):
     if i.endswith('-stress-asr.fif'):
         stress_data.append(os.path.join(fpath,i))
 
-raw_first_rest = mne.io.read_raw_fif(rest1_data[0], preload=True)
-raw_stress = mne.io.read_raw_fif(stress_data[0], preload=True)
+raw_first_rest = mne.io.read_raw_fif(rest1_data[2], preload=True)
+raw_stress = mne.io.read_raw_fif(stress_data[2], preload=True)
 
-mne.concatenate_raws([raw_first_rest,raw_stress])
+raw_asr = raw_first_rest.copy()
+
+mne.concatenate_raws([raw_asr,raw_stress])
+
+raw_asr.plot()
