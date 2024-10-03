@@ -88,7 +88,7 @@ files = {number: path[number] for number in range(len(path))}
 print(files)
 file_number = int(input("Choose File: "))
 
-raw = mne.io.read_raw_brainvision(path[file_number], preload = True)
+raw = mne.io.read_raw_brainvision(path[file_number], preload = True).set_eeg_reference(ref_channels='average')
 
 # Reconstruct the original events from our Raw object
 events, event_ids = mne.events_from_annotations(raw)
@@ -107,18 +107,18 @@ tmax = events[-1,0]/fs #Task Begin
 raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax).apply_function(lambda x: -x, picks='ECG') #make a copy
 # raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax).pick(['eeg', 'ecg']).apply_function(lambda x: -x, picks='ECG') #Without EOG
 
-regexp = r"(ECG|vEOG|hEOG)"
-artifact_picks = mne.pick_channels_regexp(raw_temp.ch_names, regexp=regexp)
+# regexp = r"(ECG|vEOG|hEOG)"
+# artifact_picks = mne.pick_channels_regexp(raw_temp.ch_names, regexp=regexp)
 
-eog_evoked = create_eog_epochs(raw_temp).average()
-eog_evoked.apply_baseline(baseline=(None, -0.2))
+# eog_evoked = create_eog_epochs(raw_temp).average()
+# eog_evoked.apply_baseline(baseline=(None, -0.2))
 
-ecg_evoked = create_ecg_epochs(raw_temp).average()
-ecg_evoked.apply_baseline(baseline=(None, -0.2))
+# ecg_evoked = create_ecg_epochs(raw_temp).average()
+# ecg_evoked.apply_baseline(baseline=(None, -0.2))
 
-filt_raw = raw_temp.load_data().copy().filter(l_freq=1.0, h_freq=None)
+filt_raw = raw_temp.load_data().copy().filter(l_freq=1.0, h_freq=100)
 
-ica = ICA(n_components=10, max_iter="auto", random_state = 95)
+ica = ICA(n_components=10, max_iter="auto",method='infomax', fit_params=dict(extended=True), random_state = 95)
 ica.fit(filt_raw)
 ica
 ica.plot_sources(raw_temp, show_scrollbars=True)
@@ -127,6 +127,8 @@ ica.plot_components()
 ########## Labeling IC Components ##########
 ic_labels = label_components(filt_raw, ica, method="iclabel")
 print(ic_labels["labels"])
+
+# labels = ic_labels["labels"]
 
 # exclude_idx = [
 #     idx for idx, label in enumerate(labels) if label not in ["brain", "other"]
