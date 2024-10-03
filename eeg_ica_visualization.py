@@ -32,7 +32,7 @@ path = ['20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001.vhdr',
 ######################################### Save ICA Function #########################################
 def save_ica(directory):
         
-    raw = mne.io.read_raw_brainvision(directory, preload = True)
+    raw = mne.io.read_raw_brainvision(directory, preload = True).set_eeg_reference(ref_channels='average')
     # raw = mne.io.read_raw_brainvision(path[file_number], preload = True)
     
     # Reconstruct the original events from our Raw object
@@ -62,7 +62,7 @@ def save_ica(directory):
     
     filt_raw = raw_temp.load_data().copy().filter(l_freq=1.0, h_freq=None)
     
-    ica = ICA(n_components=15, max_iter="auto", random_state = 95)
+    ica = ICA(n_components=15, max_iter="auto",method='infomax', fit_params=dict(extended=True), random_state = 95)
     ica.fit(filt_raw)
     ica
     
@@ -117,8 +117,9 @@ raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax).apply_function(lambda x: -x
 # ecg_evoked.apply_baseline(baseline=(None, -0.2))
 
 filt_raw = raw_temp.load_data().copy().filter(l_freq=1.0, h_freq=100)
+# filt_raw = raw_temp.load_data().copy()
 
-ica = ICA(n_components=10, max_iter="auto",method='infomax', fit_params=dict(extended=True), random_state = 95)
+ica = ICA(n_components=15, max_iter="auto",method='infomax', fit_params=dict(extended=True), random_state = 95)
 ica.fit(filt_raw)
 ica
 ica.plot_sources(raw_temp, show_scrollbars=True)

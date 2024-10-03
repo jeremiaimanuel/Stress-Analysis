@@ -19,7 +19,7 @@ fs = 1000
 directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
 
-raw = mne.io.read_raw_brainvision("20240129_mat5mins/20240129_mat5mins_001.vhdr")
+raw = mne.io.read_raw_brainvision("20240129_B71_mat5mins/20240129_B71_mat5mins_0001.vhdr")
 
 # Reconstruct the original events from our Raw object
 events, event_ids = mne.events_from_annotations(raw)
@@ -38,6 +38,8 @@ mne_ecg = np.squeeze(-mne_ecg)
 
 b, a = signal.butter(2, [0.5, 150], 'bandpass', output= 'ba', fs=fs)
 filtered = signal.filtfilt(b,a,mne_ecg)
+# b, a = signal.butter(2, [2, 40], 'bandpass', output= 'ba', fs=fs)
+# filtered = signal.filtfilt(b,a,mne_ecg)
 
 mne_ecg = filtered.copy()
 
@@ -148,15 +150,15 @@ rri = np.diff(result[:])
 heartRate = (60*fs)/np.average(rri)
 print("Heart Rate",heartRate, "BPM")
 
-# Plotting whole ECG signal
-plt.figure(figsize = (20,4), dpi = 100)
-plt.xticks(np.arange(0,len(mne_ecg)+1, 500))
-plt.plot(mne_ecg[:])
-plt.axvline(x = 300000, color = 'r')
-plt.axvline(x = 600000, color = 'r')
-plt.xlabel('Samples')
-plt.ylabel('mV')
-plt.title("Raw Signal")
+# # Plotting whole ECG signal
+# plt.figure(figsize = (20,4), dpi = 100)
+# plt.xticks(np.arange(0,len(mne_ecg)+1, 500))
+# plt.plot(mne_ecg[:])
+# plt.axvline(x = 300000, color = 'r')
+# plt.axvline(x = 600000, color = 'r')
+# plt.xlabel('Samples')
+# plt.ylabel('mV')
+# plt.title("Raw Signal")
 
 # Plotting the R peak locations in ECG signal
 plt.figure(figsize = (20,4), dpi = 100)

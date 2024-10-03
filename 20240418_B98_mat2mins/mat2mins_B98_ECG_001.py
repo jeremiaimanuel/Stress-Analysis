@@ -38,6 +38,7 @@ mne_ecg, mne_time = raw_ecg[:]
 mne_ecg = np.squeeze(-mne_ecg)
 
 b, a = signal.butter(2, [0.5, 150], 'bandpass', output= 'ba', fs=fs)
+# b, a = signal.butter(2, [2, 40], 'bandpass', output= 'ba', fs=fs)
 filtered = signal.filtfilt(b,a,mne_ecg)
 
 mne_ecg = filtered.copy()
@@ -123,14 +124,7 @@ result = result[result > 0]
 r_peak = np.unique(result) #Remove Duplicate R Peak
 #####################################################Pre Process, Data Cleaning ECG#####################################################
 
-a = []
-a += [value for value in r_peak if 500 <= value <= 1000]
-new_r_peak = [value for value in r_peak if value not in a]
-new_r_peak = np.array(new_r_peak)
-
-r_peak = new_r_peak.copy()
-
-del(a, new_r_peak)
+result = result[result>=450] #for BPF 2-40
 
 #####################################################Pre Process, Data Cleaning ECG#####################################################
 
