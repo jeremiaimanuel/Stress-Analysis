@@ -62,18 +62,18 @@ def save_ica(directory):
     
     filt_raw = raw_temp.load_data().copy().filter(l_freq=1.0, h_freq=None)
     
-    ica = ICA(n_components=32, max_iter="auto", random_state = 95)
+    ica = ICA(n_components=15, max_iter="auto", random_state = 95)
     ica.fit(filt_raw)
     ica
     
     ########## Labeling IC Components ##########
-    # ic_labels = label_components(filt_raw, ica, method="iclabel")
-    # print(ic_labels["labels"])
+    ic_labels = label_components(filt_raw, ica, method="iclabel")
+    print(ic_labels["labels"])
     
-    ## exclude_idx = [
-    ##     idx for idx, label in enumerate(labels) if label not in ["brain", "other"]
-    ## ]
-    ## print(f"Excluding these ICA components: {exclude_idx}")
+    # # exclude_idx = [
+    # #     idx for idx, label in enumerate(labels) if label not in ["brain", "other"]
+    # # ]
+    # # print(f"Excluding these ICA components: {exclude_idx}")
     ########## Labeling IC Components ##########
     
     ########## Save ICA Analysis ##########
@@ -118,20 +118,20 @@ ecg_evoked.apply_baseline(baseline=(None, -0.2))
 
 filt_raw = raw_temp.load_data().copy().filter(l_freq=1.0, h_freq=None)
 
-ica = ICA(n_components=32, max_iter="auto", random_state = 95)
+ica = ICA(n_components=10, max_iter="auto", random_state = 95)
 ica.fit(filt_raw)
 ica
 ica.plot_sources(raw_temp, show_scrollbars=True)
 ica.plot_components()
 
 ########## Labeling IC Components ##########
-# ic_labels = label_components(filt_raw, ica, method="iclabel")
-# print(ic_labels["labels"])
+ic_labels = label_components(filt_raw, ica, method="iclabel")
+print(ic_labels["labels"])
 
-## exclude_idx = [
-##     idx for idx, label in enumerate(labels) if label not in ["brain", "other"]
-## ]
-## print(f"Excluding these ICA components: {exclude_idx}")
+# exclude_idx = [
+#     idx for idx, label in enumerate(labels) if label not in ["brain", "other"]
+# ]
+# print(f"Excluding these ICA components: {exclude_idx}")
 ########## Labeling IC Components ##########
 
 ########## Save ICA Analysis ##########
