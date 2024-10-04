@@ -13,6 +13,9 @@ from mne.preprocessing import ICA, create_ecg_epochs, create_eog_epochs
 
 from mne_icalabel import label_components
 
+from pan_tompkins import pan_tompkins_qrs
+from pan_tompkins import heart_rate
+
 directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
 
@@ -32,7 +35,7 @@ path = ['20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001.vhdr',
 ######################################### Save ICA Function #########################################
 def save_ica(directory):
         
-    raw = mne.io.read_raw_brainvision(directory, preload = True).set_eeg_reference(ref_channels='average')
+    raw = mne.io.read_raw_brainvision(directory, preload = True)
     # raw = mne.io.read_raw_brainvision(path[file_number], preload = True)
     
     # Reconstruct the original events from our Raw object
@@ -42,6 +45,8 @@ def save_ica(directory):
     raw.set_channel_types({'ECG':'ecg'})
     raw.set_channel_types({'vEOG':'eog'})
     raw.set_channel_types({'hEOG':'eog'})
+    
+    raw.set_eeg_reference(ref_channels='average')
     
     raw.set_montage(montage)
     
@@ -60,11 +65,13 @@ def save_ica(directory):
         
     raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax).apply_function(lambda x: -x, picks='ECG') #make a copy
     
-    filt_raw = raw_temp.load_data().copy().filter(l_freq=1.0, h_freq=None)
+    filt_raw = raw_temp.load_data().copy().filter(l_freq=1.0, h_freq=100)
     
     ica = ICA(n_components=15, max_iter="auto",method='infomax', fit_params=dict(extended=True), random_state = 95)
     ica.fit(filt_raw)
     ica
+    ica.plot_sources(raw_temp, show_scrollbars=True)
+    ica.plot_components()
     
     ########## Labeling IC Components ##########
     ic_labels = label_components(filt_raw, ica, method="iclabel")
@@ -88,7 +95,7 @@ files = {number: path[number] for number in range(len(path))}
 print(files)
 file_number = int(input("Choose File: "))
 
-raw = mne.io.read_raw_brainvision(path[file_number], preload = True).set_eeg_reference(ref_channels='average')
+raw = mne.io.read_raw_brainvision(path[file_number], preload = True)
 
 # Reconstruct the original events from our Raw object
 events, event_ids = mne.events_from_annotations(raw)
@@ -98,6 +105,7 @@ raw.set_channel_types({'ECG':'ecg'})
 raw.set_channel_types({'vEOG':'eog'})
 raw.set_channel_types({'hEOG':'eog'})
 
+raw.set_eeg_reference(ref_channels='average')
 raw.set_montage(montage)
 
 fs = 1000
@@ -116,25 +124,25 @@ raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax).apply_function(lambda x: -x
 # ecg_evoked = create_ecg_epochs(raw_temp).average()
 # ecg_evoked.apply_baseline(baseline=(None, -0.2))
 
-filt_raw = raw_temp.load_data().copy().filter(l_freq=1.0, h_freq=100)
+filt_raw = raw_temp.load_data().copy().filter(l_freq=1.0, h_freq=40)
 # filt_raw = raw_temp.load_data().copy()
 
 ica = ICA(n_components=15, max_iter="auto",method='infomax', fit_params=dict(extended=True), random_state = 95)
 ica.fit(filt_raw)
 ica
-ica.plot_sources(raw_temp, show_scrollbars=True)
-ica.plot_components()
+ica.plot_sources(raw_temp, show_scrollbars=True,title = files[file_number])
+ica.plot_components(title = files[file_number])
 
 ########## Labeling IC Components ##########
 ic_labels = label_components(filt_raw, ica, method="iclabel")
 print(ic_labels["labels"])
 
-# labels = ic_labels["labels"]
+labels = ic_labels["labels"]
 
-# exclude_idx = [
-#     idx for idx, label in enumerate(labels) if label not in ["brain", "other"]
-# ]
-# print(f"Excluding these ICA components: {exclude_idx}")
+exclude_idx = [
+    idx for idx, label in enumerate(labels) if label not in ["brain", "other"]
+]
+print(f"Excluding these ICA components: {exclude_idx}")
 ########## Labeling IC Components ##########
 
 ########## Save ICA Analysis ##########
