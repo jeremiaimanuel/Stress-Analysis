@@ -13,8 +13,8 @@ from mne.preprocessing import ICA, create_ecg_epochs, create_eog_epochs
 
 from mne_icalabel import label_components
 
-from pan_tompkins import pan_tompkins_qrs
-from pan_tompkins import heart_rate
+# from pan_tompkins import pan_tompkins_qrs
+# from pan_tompkins import heart_rate
 
 directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
@@ -124,7 +124,7 @@ raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax).apply_function(lambda x: -x
 # ecg_evoked = create_ecg_epochs(raw_temp).average()
 # ecg_evoked.apply_baseline(baseline=(None, -0.2))
 
-filt_raw = raw_temp.load_data().copy().filter(l_freq=1.0, h_freq=40)
+filt_raw = raw_temp.load_data().copy().filter(l_freq=1.0, h_freq=100)
 # filt_raw = raw_temp.load_data().copy()
 
 ica = ICA(n_components=15, max_iter="auto",method='infomax', fit_params=dict(extended=True), random_state = 95)
