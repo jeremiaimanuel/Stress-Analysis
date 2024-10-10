@@ -46,7 +46,7 @@ def save_ica(directory):
     raw.set_channel_types({'vEOG':'eog'})
     raw.set_channel_types({'hEOG':'eog'})
     
-    raw.set_eeg_reference(ref_channels='average')
+    # raw.set_eeg_reference(ref_channels='average')
     
     raw.set_montage(montage)
     
@@ -70,8 +70,8 @@ def save_ica(directory):
     ica = ICA(n_components=15, max_iter="auto",method='infomax', fit_params=dict(extended=True), random_state = 95)
     ica.fit(filt_raw)
     ica
-    ica.plot_sources(raw_temp, show_scrollbars=True)
-    ica.plot_components()
+    # ica.plot_sources(raw_temp, show_scrollbars=True)
+    # ica.plot_components()
     
     ########## Labeling IC Components ##########
     ic_labels = label_components(filt_raw, ica, method="iclabel")
@@ -105,7 +105,7 @@ raw.set_channel_types({'ECG':'ecg'})
 raw.set_channel_types({'vEOG':'eog'})
 raw.set_channel_types({'hEOG':'eog'})
 
-raw.set_eeg_reference(ref_channels='average')
+# raw.set_eeg_reference(ref_channels='average')
 raw.set_montage(montage)
 
 fs = 1000
@@ -130,8 +130,8 @@ filt_raw = raw_temp.load_data().copy().filter(l_freq=1.0, h_freq=100)
 ica = ICA(n_components=15, max_iter="auto",method='infomax', fit_params=dict(extended=True), random_state = 95)
 ica.fit(filt_raw)
 ica
-ica.plot_sources(raw_temp, show_scrollbars=True,title = files[file_number])
-ica.plot_components(title = files[file_number])
+ica.plot_sources(raw_temp, show_scrollbars=True,title = "Non CAR %s" %files[file_number])
+ica.plot_components(title = "Non CAR %s" %files[file_number])
 
 ########## Labeling IC Components ##########
 ic_labels = label_components(filt_raw, ica, method="iclabel")
