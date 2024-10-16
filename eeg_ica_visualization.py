@@ -13,8 +13,8 @@ from mne.preprocessing import ICA, create_ecg_epochs, create_eog_epochs
 
 from mne_icalabel import label_components
 
-# from pan_tompkins import pan_tompkins_qrs
-# from pan_tompkins import heart_rate
+from pan_tompkins import pan_tompkins_qrs
+from pan_tompkins import heart_rate
 
 directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
@@ -112,37 +112,16 @@ fs = 1000
 tmin = events[3,0]/fs #Experiment Begin 
 tmax = events[-1,0]/fs #Task Begin
 
-raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax).apply_function(lambda x: -x, picks='ECG') #make a copy
-# raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax).pick(['eeg', 'ecg']).apply_function(lambda x: -x, picks='ECG') #Without EOG
+if path[file_number] == "20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001.vhdr":
+    tmin = events[9,0]/fs
+if path[file_number] == '20240725_X00_mat5mins/20240725_X00_jikken_0003.vhdr':
+    tmax = events[-2,0]/fs
+if path[file_number] == '20240725_X00_stroop5mins/20240725_X00_jikken_0001.vhdr':
+    tmax = events[-2,0]/fs
+if path[file_number] == '20240418_B98_stroop5mins/20240418_B98_jikken_0001.vhdr':
+    tmax = tmin + 900
 
-# regexp = r"(ECG|vEOG|hEOG)"
-# artifact_picks = mne.pick_channels_regexp(raw_temp.ch_names, regexp=regexp)
 
-# eog_evoked = create_eog_epochs(raw_temp).average()
-# eog_evoked.apply_baseline(baseline=(None, -0.2))
-
-# ecg_evoked = create_ecg_epochs(raw_temp).average()
-# ecg_evoked.apply_baseline(baseline=(None, -0.2))
-
-filt_raw = raw_temp.load_data().copy().filter(l_freq=1.0, h_freq=100)
-# filt_raw = raw_temp.load_data().copy()
-
-ica = ICA(n_components=15, max_iter="auto",method='infomax', fit_params=dict(extended=True), random_state = 95)
-ica.fit(filt_raw)
-ica
-ica.plot_sources(raw_temp, show_scrollbars=True,title = "Non CAR %s" %files[file_number])
-ica.plot_components(title = "Non CAR %s" %files[file_number])
-
-########## Labeling IC Components ##########
-ic_labels = label_components(filt_raw, ica, method="iclabel")
-print(ic_labels["labels"])
-
-labels = ic_labels["labels"]
-
-exclude_idx = [
-    idx for idx, label in enumerate(labels) if label not in ["brain", "other"]
-]
-print(f"Excluding these ICA components: {exclude_idx}")
 ########## Labeling IC Components ##########
 
 ########## Save ICA Analysis ##########
