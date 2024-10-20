@@ -23,12 +23,16 @@ second_rest = False
 directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
 
-fpath = 'filtered_data'
+# fpath = 'filtered_data'
+fpath = 'filtered_data_ica_all'
 
 filtered_data = []
+# for i in os.listdir(fpath):
+#     if i.endswith('-eeg-ica-filtered.fif'):
+#         filtered_data.append(os.path.join(fpath,i))
+
 for i in os.listdir(fpath):
-    if i.endswith('-eeg-ica-filtered.fif'):
-        filtered_data.append(os.path.join(fpath,i))
+    filtered_data.append(os.path.join(fpath,i))
 
 files = {number: filtered_data[number] for number in range(len(filtered_data))}
 
@@ -254,16 +258,13 @@ plt.title('UMAP projection of the Dataset', fontsize=24)
 
 ############################## DATA VISUALIZATION ##############################
 
-################################ CLASSIFICATION ################################
+################################ CLASSIFICATION 1 ################################
 
 clf = LinearDiscriminantAnalysis()
 # gkf = KFold(n_splits = 5, shuffle=True, random_state=42)
 gkf = KFold(n_splits = 5)
 pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
-# param_grid={}
-# gscv = GridSearchCV(pipe, param_grid, refit=True)
-# gscv.fit(X, y)
-pipe.fit(X,y)
+# pipe.fit(X,y)
 
 scores = cross_val_score(pipe, X, y, cv=gkf)
 print(scores)
@@ -274,6 +275,10 @@ y_pred = cross_val_predict(pipe, X,y, cv=gkf)
 print(classification_report(y,y_pred))
 
 print("ROC AUC Score: ", roc_auc_score(y, pipe.predict_proba(X)[:, 1]))
+
+# cv_roc_auc = cross_val_score(pipe, X, y, cv=gkf, scoring='roc_auc')
+# print(f'ROC AUC scores: {cv_roc_auc}')
+# print(f'Mean ROC AUC score: {cv_roc_auc.mean():.2f}')
 
 #######Plot LDA#######
 X_r2 = pipe.fit_transform(X,y)
@@ -294,4 +299,45 @@ plt.xlabel('Linear Discriminant')
 plt.show()
 #######Plot LDA#######
 
-################################ CLASSIFICATION ################################
+################################ CLASSIFICATION 1 ################################
+
+################################ CLASSIFICATION 2 ################################
+
+clf = LinearSVC(dual='auto')
+gkf = KFold(5)
+pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
+param_grid={'clf__C':[0.25,0.5,0.75, 1]}
+# param_grid={}
+# gscv = GridSearchCV(pipe, param_grid,cv = gkf,n_jobs = 4)
+
+gscv = GridSearchCV(pipe, param_grid)
+gscv.fit(X, y)
+# gkf.get_n_splits(feature,label)
+scores = cross_val_score(gscv, X, y, cv=gkf)
+print(scores)
+
+print("%0.2f accuracy with a standard deviation of %0.2f" % (scores.mean(), scores.std()))
+
+y_pred = cross_val_predict(gscv, X,y, cv=gkf)
+print(classification_report(y,y_pred))
+
+#######Plot SVM#######
+X_r3 = pipe.fit_transform(X,y)
+# lbl = ['Rest 1', 'Stress', 'Rest 2']
+plt.figure()
+if second_rest:
+    for i in np.unique(y):
+        plt.scatter(X_r2[y == i, 0], X_r2[y == i, 1], alpha=.8, label=unique_label[i])
+    plt.legend(loc='best', shadow=False, scatterpoints=1)
+    plt.title('LDA of dataset with 3 classes')
+else:
+    for i in np.unique(y):
+        plt.scatter(X_r2[y == i], np.zeros_like(X_r2[y == i]), alpha=.8, label=unique_label[i])
+    plt.legend(loc='best', shadow=False)
+    plt.yticks([])  # No need for y-axis ticks in 1D plot
+    plt.title('LDA of dataset with 2 classes')
+plt.xlabel('Linear Discriminant')
+plt.show()
+#######Plot SVM#######
+
+################################ CLASSIFICATION 2 ################################
