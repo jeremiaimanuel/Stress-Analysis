@@ -24,7 +24,8 @@ directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
 
 # fpath = 'filtered_data'
-fpath = 'filtered_data_ica_all'
+# fpath = 'filtered_data_ica_all'
+fpath = 'filtered_data_asr'
 
 filtered_data = []
 # for i in os.listdir(fpath):
@@ -205,7 +206,7 @@ df_5features = labels_str.join(X_5)
 ############################## IMPORT ML LIBRARY ##############################
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import KFold, GridSearchCV
+from sklearn.model_selection import KFold, GridSearchCV, TimeSeriesSplit
 from sklearn.svm import LinearSVC
 from sklearn.model_selection import cross_val_score, cross_val_predict
 from sklearn.metrics import classification_report, roc_auc_score
@@ -262,9 +263,11 @@ plt.title('UMAP projection of the Dataset', fontsize=24)
 
 clf = LinearDiscriminantAnalysis()
 # gkf = KFold(n_splits = 5, shuffle=True, random_state=42)
-gkf = KFold(n_splits = 5)
+n_splits = 5
+gkf = KFold(n_splits = n_splits)
+# tscv = TimeSeriesSplit(n_splits = n_splits)
 pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
-# pipe.fit(X,y)
+pipe.fit(X,y)
 
 scores = cross_val_score(pipe, X, y, cv=gkf)
 print(scores)
@@ -274,70 +277,106 @@ print("%0.2f accuracy with a standard deviation of %0.2f" % (scores.mean(), scor
 y_pred = cross_val_predict(pipe, X,y, cv=gkf)
 print(classification_report(y,y_pred))
 
-print("ROC AUC Score: ", roc_auc_score(y, pipe.predict_proba(X)[:, 1]))
+print("ROC AUC Score: ", roc_auc_score(y, y_pred))
 
-# cv_roc_auc = cross_val_score(pipe, X, y, cv=gkf, scoring='roc_auc')
-# print(f'ROC AUC scores: {cv_roc_auc}')
-# print(f'Mean ROC AUC score: {cv_roc_auc.mean():.2f}')
-
-#######Plot LDA#######
-X_r2 = pipe.fit_transform(X,y)
-# lbl = ['Rest 1', 'Stress', 'Rest 2']
-plt.figure()
-if second_rest:
-    for i in np.unique(y):
-        plt.scatter(X_r2[y == i, 0], X_r2[y == i, 1], alpha=.8, label=unique_label[i])
-    plt.legend(loc='best', shadow=False, scatterpoints=1)
-    plt.title('LDA of dataset with 3 classes')
-else:
-    for i in np.unique(y):
-        plt.scatter(X_r2[y == i], np.zeros_like(X_r2[y == i]), alpha=.8, label=unique_label[i])
+#######Plot LDA on each Fold#######
+fold_idx = 1
+for train_idx, test_idx in gkf.split(X, y):
+    print(len(train_idx), len(test_idx))
+    
+    # Use .iloc[] for DataFrame and [] for numpy arrays
+    X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]  # X is a pandas DataFrame
+    y_train, y_test = y[train_idx], y[test_idx]  # y is a numpy array
+    
+    # Fit the pipeline on the training set
+    pipe.fit(X_train, y_train)
+    
+    # Transform the data
+    X_train_lda = pipe.transform(X_train)
+    X_test_lda = pipe.transform(X_test)
+    
+    # Plot LDA for this fold
+    plt.figure()
+    for i in np.unique(y_train):
+        plt.scatter(X_train_lda[y_train == i], np.zeros_like(X_train_lda[y_train == i]), alpha=.8, label=f'Class {i} (train)')
+    for i in np.unique(y_test):
+        plt.scatter(X_test_lda[y_test == i], np.zeros_like(X_test_lda[y_test == i])-0.05, alpha=.8, label=f'Class {i} (test)')
+    
     plt.legend(loc='best', shadow=False)
     plt.yticks([])  # No need for y-axis ticks in 1D plot
-    plt.title('LDA of dataset with 2 classes')
-plt.xlabel('Linear Discriminant')
-plt.show()
-#######Plot LDA#######
+    plt.title(f'LDA of dataset for fold {fold_idx}')
+    plt.xlabel('Linear Discriminant')
+    plt.show()
+
+    fold_idx += 1
+#######Plot LDA on each Fold#######
 
 ################################ CLASSIFICATION 1 ################################
 
 ################################ CLASSIFICATION 2 ################################
+from sklearn.svm import SVC
 
-clf = LinearSVC(dual='auto')
-gkf = KFold(5)
+clf = SVC(kernel='linear')
+n_splits = 5
+gkf = KFold(n_splits = n_splits)
+# pipe = Pipeline([('scaler',StandardScaler()),('umap', mp.UMAP()),('clf',clf)])
 pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
-param_grid={'clf__C':[0.25,0.5,0.75, 1]}
-# param_grid={}
-# gscv = GridSearchCV(pipe, param_grid,cv = gkf,n_jobs = 4)
-
-gscv = GridSearchCV(pipe, param_grid)
-gscv.fit(X, y)
-# gkf.get_n_splits(feature,label)
-scores = cross_val_score(gscv, X, y, cv=gkf)
+# param_grid={'clf__C':[0.25,0.5,0.75, 1]}
+# gscv = GridSearchCV(pipe, param_grid)
+# gscv.fit(X, y)
+pipe.fit(X, y)
+# scores = cross_val_score(gscv, X, y, cv=gkf)
+scores = cross_val_score(pipe, X, y, cv=gkf)
 print(scores)
 
 print("%0.2f accuracy with a standard deviation of %0.2f" % (scores.mean(), scores.std()))
 
-y_pred = cross_val_predict(gscv, X,y, cv=gkf)
+# y_pred = cross_val_predict(gscv, X,y, cv=gkf)
+y_pred = cross_val_predict(pipe, X,y, cv=gkf)
 print(classification_report(y,y_pred))
 
+print("ROC AUC Score: ", roc_auc_score(y, y_pred))
+
 #######Plot SVM#######
-X_r3 = pipe.fit_transform(X,y)
-# lbl = ['Rest 1', 'Stress', 'Rest 2']
-plt.figure()
-if second_rest:
-    for i in np.unique(y):
-        plt.scatter(X_r2[y == i, 0], X_r2[y == i, 1], alpha=.8, label=unique_label[i])
-    plt.legend(loc='best', shadow=False, scatterpoints=1)
-    plt.title('LDA of dataset with 3 classes')
-else:
-    for i in np.unique(y):
-        plt.scatter(X_r2[y == i], np.zeros_like(X_r2[y == i]), alpha=.8, label=unique_label[i])
-    plt.legend(loc='best', shadow=False)
-    plt.yticks([])  # No need for y-axis ticks in 1D plot
-    plt.title('LDA of dataset with 2 classes')
-plt.xlabel('Linear Discriminant')
-plt.show()
+
+fold_idx = 1
+for train_idx, test_idx in gkf.split(X, y):
+    print(len(train_idx), len(test_idx))
+    # Use .iloc[] for DataFrame and [] for numpy arrays
+    X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]  # X is a pandas DataFrame
+    y_train, y_test = y[train_idx], y[test_idx]  # y is a numpy array
+    
+    # Fit the pipeline on the training set
+    pipe.fit(X_train, y_train)
+    
+    # Transform the data
+    # X_train_svc = gscv.transform(X_train)
+    # X_test_arr = X_test.values
+
+    # standardized = gscv.best_estimator_.named_steps['scaler']
+    # classifier = pipe.named_steps['clf']
+    x_min, x_max = X_test.iloc[:, 0].min() - 1, X_test.iloc[:, 0].max() + 1
+    y_min, y_max = X_test.iloc[:, 1].min() - 1, X_test.iloc[:, 1].max() + 1
+    xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.02),
+                         np.arange(y_min, y_max, 0.02))
+    
+    Z = pipe.predict(np.c_[xx.ravel(), yy.ravel()])
+    Z = Z.reshape(xx.shape)
+    
+    plt.contourf(xx, yy, Z, alpha=0.3)
+    plt.scatter(X[:, 0], X[:, 1], c=y, edgecolors='k', marker='o', s=50)
+    plt.title(f'Decision Boundary for Linear SVC {fold_idx}')
+    plt.show()
+    # a = -w[0]/w[1]
+    
+    # xx = np.linspace(0,12)
+    # yy = a *xx - classifier.intercept_[0]/w[1]
+    
+    # h0 = plt.plot(xx,yy, 'k-')
+    # # for i in np.unique(y_test):
+    # plt.scatter(X_test[:, 0],X_test[:, 1])
+    
+    fold_idx+=1
 #######Plot SVM#######
 
 ################################ CLASSIFICATION 2 ################################
