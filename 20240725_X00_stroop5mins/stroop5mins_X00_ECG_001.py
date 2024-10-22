@@ -37,11 +37,11 @@ raw_ecg = raw.copy().crop(tmin = tmin, tmax = tmax).pick_types(eeg=False, eog=Fa
 mne_ecg, mne_time = raw_ecg[:]
 mne_ecg = np.squeeze(-mne_ecg)
 
-# b, a = signal.butter(2, [0.5, 150], 'bandpass', output= 'ba', fs=fs)
-# filtered = signal.filtfilt(b,a,mne_ecg)
-
-b, a = signal.butter(2, [2, 40], 'bandpass', output= 'ba', fs=fs) ## only need to remove the very first noise peak
+b, a = signal.butter(2, [0.5, 150], 'bandpass', output= 'ba', fs=fs)
 filtered = signal.filtfilt(b,a,mne_ecg)
+
+# b, a = signal.butter(2, [2, 40], 'bandpass', output= 'ba', fs=fs) ## only need to remove the very first noise peak
+# filtered = signal.filtfilt(b,a,mne_ecg)
 
 mne_ecg = filtered.copy()
 
@@ -135,35 +135,35 @@ plt.title("R Peak Locations")
 
 r_peak = np.unique(result)
 
-# ###Pre Process, Data Cleaning ECG###
+###Pre Process, Data Cleaning ECG###
 
-# r_peak = r_peak[(r_peak>=250)
-#                 & ~((r_peak >= 614500) & (r_peak <= 615000)) 
-#                 & ~((r_peak >= 615250) & (r_peak <= 615500)) 
-#                 & ~((r_peak >= 616000) & (r_peak <= 616300)) 
-#                 & ~((r_peak >= 620000) & (r_peak <= 620300)) 
-#                 & ~((r_peak >= 620500) & (r_peak <= 621000)) 
-#                 & ~((r_peak >= 626000) & (r_peak <= 626100)) 
-#                 & ~((r_peak >= 630000) & (r_peak <= 630100)) 
-#                 & ~((r_peak >= 648600) & (r_peak <= 649000)) 
-#                 & ~((r_peak >= 649300) & (r_peak <= 649600)) 
-#                 & ~((r_peak >= 650000) & (r_peak <= 650300)) 
-#                 & ~((r_peak >= 650800) & (r_peak <= 651000)) 
-#                 & ~((r_peak >= 656800) & (r_peak <= 657000)) 
-#                 & ~((r_peak >= 657700) & (r_peak <= 658000)) 
-#                 & ~((r_peak >= 660750) & (r_peak <= 660775)) 
-#                 & ~((r_peak >= 712000) & (r_peak <= 712300)) 
-#                 & ~((r_peak >= 713400) & (r_peak <= 713600)) 
-#                 & ~((r_peak >= 714000) & (r_peak <= 714400)) 
-#                 & ~((r_peak >= 714800) & (r_peak <= 715000))]
-
-# ###Pre Process, Data Cleaning ECG###
+r_peak = r_peak[(r_peak>=250)
+                & ~((r_peak >= 614500) & (r_peak <= 615000)) 
+                & ~((r_peak >= 615250) & (r_peak <= 615500)) 
+                & ~((r_peak >= 616000) & (r_peak <= 616300)) 
+                & ~((r_peak >= 620000) & (r_peak <= 620300)) 
+                & ~((r_peak >= 620500) & (r_peak <= 621000)) 
+                & ~((r_peak >= 626000) & (r_peak <= 626100)) 
+                & ~((r_peak >= 630000) & (r_peak <= 630100)) 
+                & ~((r_peak >= 648600) & (r_peak <= 649000)) 
+                & ~((r_peak >= 649300) & (r_peak <= 649600)) 
+                & ~((r_peak >= 650000) & (r_peak <= 650300)) 
+                & ~((r_peak >= 650800) & (r_peak <= 651000)) 
+                & ~((r_peak >= 656800) & (r_peak <= 657000)) 
+                & ~((r_peak >= 657700) & (r_peak <= 658000)) 
+                & ~((r_peak >= 660750) & (r_peak <= 660775)) 
+                & ~((r_peak >= 712000) & (r_peak <= 712300)) 
+                & ~((r_peak >= 713400) & (r_peak <= 713600)) 
+                & ~((r_peak >= 714000) & (r_peak <= 714400)) 
+                & ~((r_peak >= 714800) & (r_peak <= 715000))]
 
 ###Pre Process, Data Cleaning ECG###
 
-r_peak = r_peak[(r_peak>=250)]
+# ###Pre Process, Data Cleaning ECG###
 
-###Pre Process, Data Cleaning ECG###
+# r_peak = r_peak[(r_peak>=250)]
+
+# ###Pre Process, Data Cleaning ECG###
 
 result = r_peak.copy()
 rri = r_peak.copy()
@@ -195,9 +195,9 @@ plt.title("R Peak Locations")
 
 
 ######################
+
 raw_ecg_events,_,_ = mne.preprocessing.find_ecg_events(raw_ecg)
 raw_ecg.plot(events = raw_ecg_events)
-
 
 #################### adding event from the r peak pantompkins
 r_peak_onset = []
