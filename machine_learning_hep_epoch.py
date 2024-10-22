@@ -32,22 +32,27 @@ else:
 
 ##################### Define What I need in here #####################
 
-fpath = 'epoch_data'
+# fpath = 'epoch_data'
 
-rest1_data = []
-for i in os.listdir(fpath):
-    if i.endswith('epoch_first_rest-epo.fif'):
-        rest1_data.append(os.path.join(fpath,i))
+# rest1_data = []
+# for i in os.listdir(fpath):
+#     if i.endswith('epoch_first_rest-epo.fif'):
+#         rest1_data.append(os.path.join(fpath,i))
         
-stress_data = []
-for i in os.listdir(fpath):
-    if i.endswith('epoch_stress-epo.fif'):
-        stress_data.append(os.path.join(fpath,i))
+# stress_data = []
+# for i in os.listdir(fpath):
+#     if i.endswith('epoch_stress-epo.fif'):
+#         stress_data.append(os.path.join(fpath,i))
         
-rest2_data = []
-for i in os.listdir(fpath):
-    if i.endswith('epoch_second_rest-epo.fif'):
-        rest2_data.append(os.path.join(fpath,i))
+# rest2_data = []
+# for i in os.listdir(fpath):
+#     if i.endswith('epoch_second_rest-epo.fif'):
+#         rest2_data.append(os.path.join(fpath,i))
+
+fpath = 'hep_asr'
+rest1_data = [os.path.join(fpath,i) for i in os.listdir(fpath) if i.endswith('first-epo.fif')]
+stress_data = [os.path.join(fpath,i) for i in os.listdir(fpath) if i.endswith('stress-epo.fif')]
+rest2_data = [os.path.join(fpath,i) for i in os.listdir(fpath) if i.endswith('second-epo.fif')]
 
 file_rest1 = {number: rest1_data[number] for number in range(len(rest1_data))}
 file_stress = {number: stress_data[number] for number in range(len(stress_data))}
