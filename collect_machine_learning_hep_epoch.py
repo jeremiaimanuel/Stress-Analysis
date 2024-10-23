@@ -67,8 +67,8 @@ lda_accuracy =[]
 lda_roc=[]
 svm_accuracy=[]
 svm_roc=[]
-dataset_used1 = []
-dataset_used2 = []
+# dataset_used1 = []
+# dataset_used2 = []
 
 for fnum in range(len(rest1_data)):
         
@@ -198,6 +198,8 @@ for fnum in range(len(rest1_data)):
     n_splits = 5
     # gkf = KFold(n_splits = n_splits)
     skf = StratifiedKFold(n_splits = n_splits)
+    # umap = mp.UMAP(random_state=99)
+    # pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
     # tscv = TimeSeriesSplit(n_splits = n_splits)
     pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
     pipe.fit_transform(X,y)
@@ -214,31 +216,31 @@ for fnum in range(len(rest1_data)):
     
     ################################ CLASSIFICATION 1 ################################
     
-    ################################ CLASSIFICATION 2 ################################
+    # ################################ CLASSIFICATION 2 ################################
     
-    clf = SVC(kernel='linear')
-    n_splits = 5
-    scl = StandardScaler()
-    skf = StratifiedKFold(n_splits = n_splits)
-    umap = mp.UMAP(random_state=99)
-    pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
-    # pipe = Pipeline([('scl',StandardScaler()),('clf',clf)])
-    # param_grid={'clf__C':[0.25,0.5,0.75, 1]}
-    # gscv = GridSearchCV(pipe, param_grid)
-    # gscv.fit(X, y)
-    pipe.fit(X, y)
+    # clf = SVC(kernel='linear')
+    # n_splits = 5
+    # scl = StandardScaler()
+    # skf = StratifiedKFold(n_splits = n_splits)
+    # umap = mp.UMAP(random_state=99)
+    # pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
+    # # pipe = Pipeline([('scl',StandardScaler()),('clf',clf)])
+    # # param_grid={'clf__C':[0.25,0.5,0.75, 1]}
+    # # gscv = GridSearchCV(pipe, param_grid)
+    # # gscv.fit(X, y)
+    # pipe.fit(X, y)
     
-    acc_scores_svm = cross_val_score(pipe, X, y, cv=skf, scoring='accuracy')
-    # print(acc_scores_svm)
-    svm_accuracy.append(acc_scores_svm.mean())
-    # print("%0.2f SVM accuracy with a standard deviation of %0.2f from dataset %d" % (acc_scores_svm.mean(), acc_scores_svm.std(),fnum))
+    # acc_scores_svm = cross_val_score(pipe, X, y, cv=skf, scoring='accuracy')
+    # # print(acc_scores_svm)
+    # svm_accuracy.append(acc_scores_svm.mean())
+    # # print("%0.2f SVM accuracy with a standard deviation of %0.2f from dataset %d" % (acc_scores_svm.mean(), acc_scores_svm.std(),fnum))
     
-    roc_scores_svm = cross_val_score(pipe, X, y, cv=skf, scoring='roc_auc')
-    # print(roc_scores_svm)
-    svm_roc.append(roc_scores_svm.mean())
-    # print("SVM ROC AUC Score:%0.2f from dataset %d" % (roc_scores_svm.mean(),fnum))
+    # roc_scores_svm = cross_val_score(pipe, X, y, cv=skf, scoring='roc_auc')
+    # # print(roc_scores_svm)
+    # svm_roc.append(roc_scores_svm.mean())
+    # # print("SVM ROC AUC Score:%0.2f from dataset %d" % (roc_scores_svm.mean(),fnum))
         
-    ################################ CLASSIFICATION 2 ################################
+    # ################################ CLASSIFICATION 2 ################################
     
-    dataset_used1.append(epoch_rest)
-    dataset_used2.append(epoch_stress)
+    # dataset_used1.append(epoch_rest)
+    # dataset_used2.append(epoch_stress)
