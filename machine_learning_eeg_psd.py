@@ -24,16 +24,10 @@ directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
 
 # fpath = 'filtered_data'
-# fpath = 'filtered_data_ica_all'
-fpath = 'filtered_data_asr'
+fpath = 'filtered_data_ica_all'
+# fpath = 'filtered_data_asr'
 
-filtered_data = []
-# for i in os.listdir(fpath):
-#     if i.endswith('-eeg-ica-filtered.fif'):
-#         filtered_data.append(os.path.join(fpath,i))
-
-for i in os.listdir(fpath):
-    filtered_data.append(os.path.join(fpath,i))
+filtered_data = [os.path.join(fpath,i) for i in os.listdir(fpath)]
 
 files = {number: filtered_data[number] for number in range(len(filtered_data))}
 
@@ -187,101 +181,106 @@ display(df)
 X = df.filter(like='ch')
 y = np.ravel(df.filter(like='label'))
 
-X_theta = df.filter(like='ch.theta')
-X_alpha = df.filter(like='ch.alpha')
-X_beta = df.filter(like='ch.beta')
-X_gamma = df.filter(like='ch.gamma')
+# X_theta = df.filter(like='ch.theta')
+# X_alpha = df.filter(like='ch.alpha')
+# X_beta = df.filter(like='ch.beta')
+# X_gamma = df.filter(like='ch.gamma')
 
-df_theta = labels.join(X_theta)
-df_alpha = labels.join(X_alpha)
-df_beta = labels.join(X_beta)
-df_gamma = labels.join(X_gamma)
+# df_theta = labels.join(X_theta)
+# df_alpha = labels.join(X_alpha)
+# df_beta = labels.join(X_beta)
+# df_gamma = labels.join(X_gamma)
 
-
-n_features = 5
-X_5 = df.sample(n_features, axis = 1, random_state=99)
-df_5features = labels_str.join(X_5)
+# n_features = 5
+# X_5 = df.sample(n_features, axis = 1, random_state=99)
+# df_5features = labels_str.join(X_5)
 ############################# DATA FRAME FEATURE #############################
 
 ############################## IMPORT ML LIBRARY ##############################
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import KFold, GridSearchCV, TimeSeriesSplit
+from sklearn.model_selection import KFold, GridSearchCV, StratifiedKFold
 from sklearn.svm import LinearSVC
 from sklearn.model_selection import cross_val_score, cross_val_predict
-from sklearn.metrics import classification_report, roc_auc_score
+from sklearn.metrics import classification_report, roc_auc_score, accuracy_score
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+import umap.umap_ as mp
+import seaborn as sns
 ############################## IMPORT ML LIBRARY ##############################
 
-############################## DATA VISUALIZATION ##############################
+# ############################## DATA VISUALIZATION ##############################
 
-%matplotlib inline
+# %matplotlib inline
+
+# # sns.set(style='white', context='notebook', rc={'figure.figsize':(14,10)})
+# sns.set(style='white', context='notebook', rc={'figure.figsize':(54,50)})
+
+# sns.pairplot(df_5features, hue = 'status',palette= "tab10")
+# # sns.pairplot(df_theta, hue = 'status',palette= "tab10")
+# # sns.pairplot(df_alpha, hue = 'status',palette= "tab10")
+# # sns.pairplot(df_beta, hue = 'status',palette= "tab10")
+# # sns.pairplot(df_gamma, hue = 'status',palette= "tab10")
+
+
+
+# reducer = mp.UMAP()
+# scaled_data = StandardScaler().fit_transform(X)
+# embedding = reducer.fit_transform(scaled_data)
+# embedding.shape
+
+# unique_label = df.status.unique()
 
 # sns.set(style='white', context='notebook', rc={'figure.figsize':(14,10)})
-sns.set(style='white', context='notebook', rc={'figure.figsize':(54,50)})
 
-sns.pairplot(df_5features, hue = 'status',palette= "tab10")
-# sns.pairplot(df_theta, hue = 'status',palette= "tab10")
-# sns.pairplot(df_alpha, hue = 'status',palette= "tab10")
-# sns.pairplot(df_beta, hue = 'status',palette= "tab10")
-# sns.pairplot(df_gamma, hue = 'status',palette= "tab10")
+# fig, ax = plt.subplots()
+# scatter = ax.scatter(
+#     embedding[:, 0],
+#     embedding[:, 1],
+#     c=[sns.color_palette()[x] for x in df.label])
 
-import umap.umap_ as mp
+# # Create a custom legend with unique colors and labels
+# legend_handles = []
+# for i, label in enumerate(unique_label):
+#     color = sns.color_palette()[i]
+#     handle = plt.Line2D([0], [0], marker='o', color='w', label=label,
+#                         markerfacecolor=color, markersize=10)
+#     legend_handles.append(handle)
 
-reducer = mp.UMAP()
-scaled_data = StandardScaler().fit_transform(X)
-embedding = reducer.fit_transform(scaled_data)
-embedding.shape
+# legend = ax.legend(handles=legend_handles, loc="lower left", title="Classes")
+# ax.add_artist(legend)
 
-unique_label = df.status.unique()
+# plt.gca().set_aspect('equal','datalim')
+# plt.title('UMAP projection of the Dataset', fontsize=24)
 
-sns.set(style='white', context='notebook', rc={'figure.figsize':(14,10)})
-
-fig, ax = plt.subplots()
-scatter = ax.scatter(
-    embedding[:, 0],
-    embedding[:, 1],
-    c=[sns.color_palette()[x] for x in df.label])
-
-# Create a custom legend with unique colors and labels
-legend_handles = []
-for i, label in enumerate(unique_label):
-    color = sns.color_palette()[i]
-    handle = plt.Line2D([0], [0], marker='o', color='w', label=label,
-                        markerfacecolor=color, markersize=10)
-    legend_handles.append(handle)
-
-legend = ax.legend(handles=legend_handles, loc="lower left", title="Classes")
-ax.add_artist(legend)
-
-plt.gca().set_aspect('equal','datalim')
-plt.title('UMAP projection of the Dataset', fontsize=24)
-
-############################## DATA VISUALIZATION ##############################
+# ############################## DATA VISUALIZATION ##############################
 
 ################################ CLASSIFICATION 1 ################################
 
 clf = LinearDiscriminantAnalysis()
-# gkf = KFold(n_splits = 5, shuffle=True, random_state=42)
+scl = StandardScaler()
 n_splits = 5
-gkf = KFold(n_splits = n_splits)
+# gkf = KFold(n_splits = n_splits)
+skf = StratifiedKFold(n_splits = n_splits)
 # tscv = TimeSeriesSplit(n_splits = n_splits)
 pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
 pipe.fit(X,y)
 
-scores = cross_val_score(pipe, X, y, cv=gkf)
-print(scores)
+acc_scores = cross_val_score(pipe, X, y, cv=skf, scoring='accuracy')
+print(acc_scores)
 
-print("%0.2f accuracy with a standard deviation of %0.2f" % (scores.mean(), scores.std()))
+print("%0.2f LDA accuracy with a standard deviation of %0.2f" % (acc_scores.mean(), acc_scores.std()))
 
-y_pred = cross_val_predict(pipe, X,y, cv=gkf)
+roc_scores = cross_val_score(pipe, X, y, cv=skf, scoring='roc_auc')
+print(roc_scores)
+
+print("LDA ROC AUC Score: ", roc_scores.mean())
+
+y_pred = cross_val_predict(pipe, X,y, cv=skf)
 print(classification_report(y,y_pred))
-
-print("ROC AUC Score: ", roc_auc_score(y, y_pred))
 
 #######Plot LDA on each Fold#######
 fold_idx = 1
-for train_idx, test_idx in gkf.split(X, y):
+for train_idx, test_idx in skf.split(X, y):
     print(len(train_idx), len(test_idx))
     
     # Use .iloc[] for DataFrame and [] for numpy arrays
@@ -318,64 +317,89 @@ from sklearn.svm import SVC
 
 clf = SVC(kernel='linear')
 n_splits = 5
+scl = StandardScaler()
 gkf = KFold(n_splits = n_splits)
-# pipe = Pipeline([('scaler',StandardScaler()),('umap', mp.UMAP()),('clf',clf)])
-pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
+skf = StratifiedKFold(n_splits = n_splits)
+umap = mp.UMAP(random_state=99)
+pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
+# pipe = Pipeline([('scl',StandardScaler()),('clf',clf)])
 # param_grid={'clf__C':[0.25,0.5,0.75, 1]}
 # gscv = GridSearchCV(pipe, param_grid)
 # gscv.fit(X, y)
 pipe.fit(X, y)
-# scores = cross_val_score(gscv, X, y, cv=gkf)
-scores = cross_val_score(pipe, X, y, cv=gkf)
-print(scores)
 
-print("%0.2f accuracy with a standard deviation of %0.2f" % (scores.mean(), scores.std()))
+acc_scores = cross_val_score(pipe, X, y, cv=skf, scoring='accuracy')
+print(acc_scores)
 
-# y_pred = cross_val_predict(gscv, X,y, cv=gkf)
-y_pred = cross_val_predict(pipe, X,y, cv=gkf)
+print("%0.2f SVM accuracy with a standard deviation of %0.2f" % (acc_scores.mean(), acc_scores.std()))
+
+roc_scores = cross_val_score(pipe, X, y, cv=skf, scoring='roc_auc')
+print(roc_scores)
+
+print("SVM ROC AUC Score: ", roc_scores.mean())
+
+y_pred = cross_val_predict(pipe, X,y, cv=skf)
 print(classification_report(y,y_pred))
 
-print("ROC AUC Score: ", roc_auc_score(y, y_pred))
+# cm = confusion_matrix(y,y_pred)
+# print(cm)
 
 #######Plot SVM#######
+from matplotlib.colors import ListedColormap
 
 fold_idx = 1
-for train_idx, test_idx in gkf.split(X, y):
+for train_idx, test_idx in skf.split(X, y):
     print(len(train_idx), len(test_idx))
     # Use .iloc[] for DataFrame and [] for numpy arrays
     X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]  # X is a pandas DataFrame
     y_train, y_test = y[train_idx], y[test_idx]  # y is a numpy array
     
-    # Fit the pipeline on the training set
-    pipe.fit(X_train, y_train)
-    
-    # Transform the data
-    # X_train_svc = gscv.transform(X_train)
-    # X_test_arr = X_test.values
+    #### Scaled and Classified 1 by 1 ####
 
-    # standardized = gscv.best_estimator_.named_steps['scaler']
-    # classifier = pipe.named_steps['clf']
-    x_min, x_max = X_test.iloc[:, 0].min() - 1, X_test.iloc[:, 0].max() + 1
-    y_min, y_max = X_test.iloc[:, 1].min() - 1, X_test.iloc[:, 1].max() + 1
+    X_train_scaled = scl.fit_transform(X_train,y_train)
+    X_test_scaled = scl.transform(X_test)
+
+    X_train_reduced = umap.fit_transform(X_train_scaled,y_train)
+    X_test_reduced = umap.transform(X_test_scaled)
+    
+    clf.fit(X_train_reduced, y_train)
+    y_pred = clf.predict(X_test_reduced)
+
+    x_min, x_max = X_test_reduced[:, 0].min() - 1, X_test_reduced[:, 0].max() + 1
+    y_min, y_max = X_test_reduced[:, 1].min() - 1, X_test_reduced[:, 1].max() + 1
     xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.02),
-                         np.arange(y_min, y_max, 0.02))
+                          np.arange(y_min, y_max, 0.02))
+
+    grid = np.c_[xx.ravel(), yy.ravel()]
+    Z = np.reshape(clf.predict(grid), xx.shape)
+
+    plt.figure()
+    plt.contourf(xx, yy, Z, alpha=0.3,cmap = ListedColormap(('green','red')))
+    plt.xlim(xx.min(),xx.max())
+    plt.ylim(yy.min(),yy.max())
+
+    for i,j in enumerate(np.unique(y_train)):
+        if j == 0:
+            label = 'Rest_train'
+        else:
+            label = 'Stress_train'
+        plt.scatter(X_train_reduced[y_train ==j,0],X_train_reduced[y_train==j,1],
+                    c=ListedColormap(('limegreen','lightcoral'))(i),label=label)
     
-    Z = pipe.predict(np.c_[xx.ravel(), yy.ravel()])
-    Z = Z.reshape(xx.shape)
+    for i,j in enumerate(np.unique(y_test)):
+        if j == 0:
+            label = 'Rest'
+        else:
+            label = 'Stress'
+        plt.scatter(X_test_reduced[y_test ==j,0],X_test_reduced[y_test==j,1],
+                    c=ListedColormap(('green','red'))(i),label=label)
     
-    plt.contourf(xx, yy, Z, alpha=0.3)
-    plt.scatter(X[:, 0], X[:, 1], c=y, edgecolors='k', marker='o', s=50)
-    plt.title(f'Decision Boundary for Linear SVC {fold_idx}')
+    plt.legend()
+    plt.xlabel('Feature 1')
+    plt.ylabel('Feature 2')
+    plt.title(f'Decision Boundary for Linear SVC fold {fold_idx}')
     plt.show()
-    # a = -w[0]/w[1]
-    
-    # xx = np.linspace(0,12)
-    # yy = a *xx - classifier.intercept_[0]/w[1]
-    
-    # h0 = plt.plot(xx,yy, 'k-')
-    # # for i in np.unique(y_test):
-    # plt.scatter(X_test[:, 0],X_test[:, 1])
-    
+
     fold_idx+=1
 #######Plot SVM#######
 

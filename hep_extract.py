@@ -86,7 +86,7 @@ r_peak_events,raw_ecg = make_r_peaks_events(raw)
 
 def save_hep(folder_dir,file_dir,folder_save,epoch_events=r_peak_events):
     
-    raw = mne.io.read_raw_fif(os.path.join(folder_dir,file_dir))
+    raw = mne.io.read_raw_fif(os.path.join(folder_dir,file_dir)).pick_types(['eeg'])
     fs = 1000
     
     events, event_ids = mne.events_from_annotations(raw)
@@ -157,7 +157,7 @@ def save_hep(folder_dir,file_dir,folder_save,epoch_events=r_peak_events):
 #####################################################
 #####################################################
 
-save_hep(folder_asr,fpath_asr[counter],folder_epoch_asr,r_peak_events)
+# save_hep(folder_asr,fpath_asr[counter],folder_epoch_asr,r_peak_events)
 save_hep(folder_ica,fpath_ica[counter],folder_epoch_ica,r_peak_events)
 
 for i in range(len(fpath_raw)):
@@ -219,7 +219,7 @@ for i in range(len(fpath_raw)):
 
     def save_hep(folder_dir,file_dir,folder_save,epoch_events=r_peak_events):
         
-        raw = mne.io.read_raw_fif(os.path.join(folder_dir,file_dir))
+        raw = mne.io.read_raw_fif(os.path.join(folder_dir,file_dir)).pick_types(eeg=True)
         fs = 1000
         
         events, event_ids = mne.events_from_annotations(raw)
@@ -263,24 +263,28 @@ for i in range(len(fpath_raw)):
         #                        tmax=epoch_tmax, 
         #                        baseline=baseline
         #                        )
+        drop = dict(eeg = 100e-6)
         
         firstrest_epoch = mne.Epochs(firstrest,
                                      events=firstrest_events, 
                                      tmin=epoch_tmin, 
                                      tmax=epoch_tmax, 
-                                     baseline=baseline
+                                     baseline=baseline,
+                                     reject=drop
                                      )
         stress_epoch = mne.Epochs(stress,
                                   events=stress_events, 
                                   tmin=epoch_tmin, 
                                   tmax=epoch_tmax, 
-                                  baseline=baseline
+                                  baseline=baseline,
+                                  reject=drop
                                   )
         secondrest_epoch = mne.Epochs(secondrest,
                                       events=secondrest_events, 
                                       tmin=epoch_tmin, 
                                       tmax=epoch_tmax, 
-                                      baseline=baseline
+                                      baseline=baseline,
+                                      reject=drop
                                       )
 
         firstrest_epoch.save(os.path.join(folder_save,file_dir.replace(".fif", "-first-epo.fif")), overwrite=True)
