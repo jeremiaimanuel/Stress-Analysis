@@ -198,6 +198,13 @@ y = np.ravel(df.filter(like='label'))
 # y = df.filter(like='label')
 
 ###############################################################################
+
+from scipy.stats import ttest_ind
+
+t_test_data = ttest_ind(feature_rest,feature_stress)
+print(t_test_data.pvalue)
+
+###############################################################################
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import KFold, GridSearchCV, StratifiedKFold
