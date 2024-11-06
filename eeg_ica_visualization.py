@@ -76,7 +76,7 @@ def save_ica(directory):
     ########## Labeling IC Components ##########
     ic_labels = label_components(filt_raw, ica, method="iclabel")
     print(ic_labels["labels"])
-    
+    # # labels = ic_labels["labels"]
     # # exclude_idx = [
     # #     idx for idx, label in enumerate(labels) if label not in ["brain", "other"]
     # # ]
@@ -121,7 +121,25 @@ if path[file_number] == '20240725_X00_stroop5mins/20240725_X00_jikken_0001.vhdr'
 if path[file_number] == '20240418_B98_stroop5mins/20240418_B98_jikken_0001.vhdr':
     tmax = tmin + 900
 
+raw_temp = raw.copy().crop(tmin = tmin, tmax = tmax).apply_function(lambda x: -x, picks='ECG') #make a copy
 
+filt_raw = raw_temp.load_data().copy().filter(l_freq=1.0, h_freq=100)
+
+ica = ICA(n_components=15, max_iter="auto",method='infomax', fit_params=dict(extended=True), random_state = 95)
+ica.fit(filt_raw)
+ica
+# ica.plot_sources(raw_temp, show_scrollbars=True)
+# ica.plot_components()
+
+########## Labeling IC Components ##########
+ic_labels = label_components(filt_raw, ica, method="iclabel")
+print(ic_labels["labels"])
+
+exclude_idx = [idx for idx, label in enumerate(labels) if label not in ["brain", "other"]]
+
+ica.exclude = exclude_idx
+reconst_raw = raw_temp.copy()
+ica.apply(reconst_raw)
 ########## Labeling IC Components ##########
 
 ########## Save ICA Analysis ##########
@@ -175,3 +193,8 @@ ax1.title.set_text(ica_picked)
 ax2.title.set_text('ECG')
 plt.show()
 ########## ECG ICA Analysis ##########
+
+########## Check Alpha Wave ##########
+alpha_band_reconst = reconst_raw.copy().filter(l_freq=8, h_freq=13, method='fir', verbose=False)
+alpha_band_reconst.plot()
+########## Check Alpha Wave ##########

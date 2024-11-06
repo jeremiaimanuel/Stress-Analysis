@@ -24,7 +24,7 @@ include_second_rest = False
 segmented = True
 
 only_twave = True #IF True, better make n_segment = 2, if Flase, n_segment = 8
-stats = 'all'
+stats = 'std'
 if only_twave:
     n_segment = 4
 else:
@@ -203,6 +203,10 @@ from scipy.stats import ttest_ind
 
 t_test_data = ttest_ind(feature_rest,feature_stress)
 print(t_test_data.pvalue)
+
+p_value = t_test_data.pvalue
+
+p_value_data = np.hstack=([ch_names, np.squeeze(p_value)])
 
 ###############################################################################
 from sklearn.pipeline import Pipeline
