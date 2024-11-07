@@ -24,8 +24,8 @@ directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
 
 # fpath = 'filtered_data'
-fpath = 'filtered_data_ica_all'
-# fpath = 'filtered_data_asr'
+# fpath = 'filtered_data_ica_all'
+fpath = 'filtered_data_asr'
 
 filtered_data = [os.path.join(fpath,i) for i in os.listdir(fpath)]
 
@@ -123,11 +123,7 @@ eeg_ch_names = raw.pick_types(eeg=True, eog=False, ecg=False).ch_names
 
 prefixes = ["ch.theta.", "ch.alpha.", "ch.beta.", "ch.gamma."]
 
-new_eeg_ch_names = []
-for i in prefixes:
-    for j in eeg_ch_names:
-        name = i+j
-        new_eeg_ch_names.append(name)
+new_eeg_ch_names = [i+j for i in prefixes for j in eeg_ch_names]
         
 theta_data_rest = abs_power_extraction(eeg_data, fs, 4, 8, 0, eeg_newseg1)
 theta_data_stress = abs_power_extraction(eeg_data, fs, 4, 8, eeg_newseg1, eeg_newseg2)
@@ -168,7 +164,22 @@ else:
     label_str = np.concatenate((label_str_rest, label_str_stress))    
 
     feature = feature.T
+###############################################################################
 
+from scipy.stats import ttest_ind
+
+t_test_data = ttest_ind(data_list_rest.T,data_list_stress.T)
+print(t_test_data.pvalue)
+
+p_value = t_test_data.pvalue
+
+p_value_data = np.column_stack((new_eeg_ch_names, p_value))
+
+for i in range(len(p_value)):
+    if p_value[i] >= 0.05:
+        print(i)
+
+###############################################################################
 ############################# DATA FRAME FEATURE #############################
 features = pd.DataFrame(feature, columns = new_eeg_ch_names)
 labels = pd.DataFrame(label, columns= ['label'])
@@ -212,16 +223,18 @@ import seaborn as sns
 
 # %matplotlib inline
 
-# # sns.set(style='white', context='notebook', rc={'figure.figsize':(14,10)})
+sns.set(style='white', context='notebook', rc={'figure.figsize':(14,10)})
 # sns.set(style='white', context='notebook', rc={'figure.figsize':(54,50)})
 
 # sns.pairplot(df_5features, hue = 'status',palette= "tab10")
-# # sns.pairplot(df_theta, hue = 'status',palette= "tab10")
-# # sns.pairplot(df_alpha, hue = 'status',palette= "tab10")
-# # sns.pairplot(df_beta, hue = 'status',palette= "tab10")
-# # sns.pairplot(df_gamma, hue = 'status',palette= "tab10")
+# sns.pairplot(df_theta, hue = 'status',palette= "tab10")
+# sns.pairplot(df_alpha, hue = 'status',palette= "tab10")
+# sns.pairplot(df_beta, hue = 'status',palette= "tab10")
+# sns.pairplot(df_gamma, hue = 'status',palette= "tab10")
 
-
+df_tp10 = X.filter(like='ch.gamma.TP10')
+df_tp10 = labels_str.join(df_tp10)
+sns.pairplot(df_tp10, hue = 'status',palette= "tab10")
 
 # reducer = mp.UMAP()
 # scaled_data = StandardScaler().fit_transform(X)
