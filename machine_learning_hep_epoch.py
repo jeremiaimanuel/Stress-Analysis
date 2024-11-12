@@ -33,24 +33,9 @@ else:
 ##################### Define What I need in here #####################
 
 # fpath = 'epoch_data'
-
-# rest1_data = []
-# for i in os.listdir(fpath):
-#     if i.endswith('epoch_first_rest-epo.fif'):
-#         rest1_data.append(os.path.join(fpath,i))
-        
-# stress_data = []
-# for i in os.listdir(fpath):
-#     if i.endswith('epoch_stress-epo.fif'):
-#         stress_data.append(os.path.join(fpath,i))
-        
-# rest2_data = []
-# for i in os.listdir(fpath):
-#     if i.endswith('epoch_second_rest-epo.fif'):
-#         rest2_data.append(os.path.join(fpath,i))
-
 # fpath = 'hep_asr'
 fpath = 'hep_ica_all'
+
 rest1_data = [os.path.join(fpath,i) for i in os.listdir(fpath) if i.endswith('first-epo.fif')]
 stress_data = [os.path.join(fpath,i) for i in os.listdir(fpath) if i.endswith('stress-epo.fif')]
 rest2_data = [os.path.join(fpath,i) for i in os.listdir(fpath) if i.endswith('second-epo.fif')]

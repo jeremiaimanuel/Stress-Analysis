@@ -23,12 +23,17 @@ fpath_asr=[i for i in os.listdir(folder_asr)]
 folder_ica = 'filtered_data_ica_all'
 fpath_ica=[i for i in os.listdir(folder_ica)]
 
+folder_ica_eog = "filtered_data_ica_eog"
+fpath_ica_eog=[i for i in os.listdir(folder_ica_eog)]
+
 folder_epoch_asr = "hep_asr"
 folder_epoch_ica = "hep_ica_all"
+folder_epoch_ica_eog = "hep_ica_eog"
+
 
 #####################################################
 
-counter = 0
+counter = 1
 
 raw = mne.io.read_raw_brainvision(os.path.join(folder_raw, fpath_raw[counter]))
 
@@ -59,9 +64,9 @@ def make_r_peaks_events(raw=raw):
     mne_ecg,_ = raw_ecg[:]
     mne_ecg = np.squeeze(-mne_ecg)
 
-    _, info = nk.ecg_process(mne_ecg, sampling_rate = fs)
+    _, info = nk.ecg_process(mne_ecg, sampling_rate = fs) #Getting the R-Peak Location
 
-    results_corr = processing.correct_peaks(mne_ecg, info['ECG_R_Peaks'], 36, 50, 'up')
+    results_corr = processing.correct_peaks(mne_ecg, info['ECG_R_Peaks'], 36, 50, 'up') #Readjustment for the R-Peak Location
 
     r_peak_onset = []
     for i in range(len(results_corr)):
@@ -86,7 +91,7 @@ r_peak_events,raw_ecg = make_r_peaks_events(raw)
 
 def save_hep(folder_dir,file_dir,folder_save,epoch_events=r_peak_events):
     
-    raw = mne.io.read_raw_fif(os.path.join(folder_dir,file_dir)).pick_types(['eeg'])
+    raw = mne.io.read_raw_fif(os.path.join(folder_dir,file_dir)).pick_types(eeg=True)
     fs = 1000
     
     events, event_ids = mne.events_from_annotations(raw)
@@ -124,30 +129,34 @@ def save_hep(folder_dir,file_dir,folder_save,epoch_events=r_peak_events):
     secondrest_events = epoch_events[(epoch_events[:, 0] >= trg2)]
       
     # Creating epochs
-    hep_epoch = mne.Epochs(raw,
-                           events=epoch_events,
-                           tmin=epoch_tmin, 
-                           tmax=epoch_tmax, 
-                           baseline=baseline
-                           )
+    # hep_epoch = mne.Epochs(raw,
+    #                        events=epoch_events,
+    #                        tmin=epoch_tmin, 
+    #                        tmax=epoch_tmax, 
+    #                        baseline=baseline
+    #                        )
+    drop = dict(eeg = 100e-6)
     
     firstrest_epoch = mne.Epochs(firstrest,
                                  events=firstrest_events, 
                                  tmin=epoch_tmin, 
                                  tmax=epoch_tmax, 
-                                 baseline=baseline
+                                 baseline=baseline,
+                                 reject=drop
                                  )
     stress_epoch = mne.Epochs(stress,
                               events=stress_events, 
                               tmin=epoch_tmin, 
                               tmax=epoch_tmax, 
-                              baseline=baseline
+                              baseline=baseline,
+                              reject=drop
                               )
     secondrest_epoch = mne.Epochs(secondrest,
                                   events=secondrest_events, 
                                   tmin=epoch_tmin, 
                                   tmax=epoch_tmax, 
-                                  baseline=baseline
+                                  baseline=baseline,
+                                  reject=drop
                                   )
 
     firstrest_epoch.save(os.path.join(folder_save,file_dir.replace(".fif", "-first-epo.fif")), overwrite=True)
@@ -158,8 +167,11 @@ def save_hep(folder_dir,file_dir,folder_save,epoch_events=r_peak_events):
 #####################################################
 
 # save_hep(folder_asr,fpath_asr[counter],folder_epoch_asr,r_peak_events)
-save_hep(folder_ica,fpath_ica[counter],folder_epoch_ica,r_peak_events)
+# save_hep(folder_ica,fpath_ica[counter],folder_epoch_ica,r_peak_events)
+save_hep(folder_ica_eog,fpath_ica_eog[counter],folder_epoch_ica_eog,r_peak_events)
 
+
+#####################################################
 for i in range(len(fpath_raw)):
     counter = i
 
@@ -294,7 +306,8 @@ for i in range(len(fpath_raw)):
     #####################################################
     #####################################################
 
-    save_hep(folder_asr,fpath_asr[counter],folder_epoch_asr,r_peak_events)
-    save_hep(folder_ica,fpath_ica[counter],folder_epoch_ica,r_peak_events)
+    # save_hep(folder_asr,fpath_asr[counter],folder_epoch_asr,r_peak_events)
+    # save_hep(folder_ica,fpath_ica[counter],folder_epoch_ica,r_peak_events)
+    save_hep(folder_ica_eog,fpath_ica_eog[counter],folder_epoch_ica_eog,r_peak_events)
     
     

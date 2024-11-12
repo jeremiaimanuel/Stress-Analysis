@@ -69,14 +69,16 @@ eeg_newseg3 = int(eeg_seg3/fs)
 ################################## LOAD FILE ##################################
 
 ############################# FEATURE EXTRACTION #############################
+eeg_ch_names = raw.pick_types(eeg=True).ch_names
+prefixes = ["ch.theta.", "ch.alpha.", "ch.beta.", "ch.gamma."]
+new_eeg_ch_names = [i+j for i in prefixes for j in eeg_ch_names]
 
-def abs_power_extraction(signal, fs, l_freq, h_freq, tmin, tmax, t_seg = 10, noverlap = 0.9):
+def welch_extraction_mne(raw, l_freq, h_freq, tmin, tmax, t_seg=10, t_overlap=9):
     """
     Extract Absolute PSD from Data
 
     Parameters:
     :param signal: Signal that want to be extracted from
-    :param fs: frequency sampling
     :param l_freq: Minimum range of EEG bands frequency (Theta = 4, Alpha = 8, Beta = 12, Gamma = 30)
     :param h_freq: Maxmimum range of EEG bands frequency (Theta = 8, Alpha = 12, Beta = 30, Gamma = 45)
     :param tmin: Start time where the frequency of the signal want to be extracted 
@@ -87,59 +89,37 @@ def abs_power_extraction(signal, fs, l_freq, h_freq, tmin, tmax, t_seg = 10, nov
     Returns:
     :return: Extracted absolute Power
     """
-
-    freq_data = []
-
-    segment_length = t_seg*fs  # seconds
-    overlap = int(segment_length*noverlap)  # usually t_overlap = 9 seconds, so overlap about 90% of segment
-
-    for i in range(len(signal)):
-        data_channel = signal[i]
-        freq_over_time = []
-        for j in range(0, len(data_channel), segment_length - overlap):
-            segment = data_channel[j:j + segment_length]
-
-            if len(segment) < segment_length:
-                nperseg = len(segment)
-            else:
-                nperseg = segment_length
-
-            #Compute PSD
-            f_eeg, Pxx_eeg = sg.welch(segment, fs, nperseg = nperseg)
-
-            idx_freq = np.where((l_freq<= f_eeg) & (f_eeg<= h_freq))
-
-            abs_power_freq = np.sum(np.abs(Pxx_eeg[idx_freq]))
-
-            #Append
-            if math.isnan(abs_power_freq) == False:
-                freq_over_time.append(abs_power_freq)
-        freq_data.append(freq_over_time[tmin:tmax])
     
-    return np.array(freq_data)
-
-eeg_data = raw.pick_types(eeg=True, eog=False, ecg=False).get_data()
-eeg_ch_names = raw.pick_types(eeg=True, eog=False, ecg=False).ch_names
-
-prefixes = ["ch.theta.", "ch.alpha.", "ch.beta.", "ch.gamma."]
-
-new_eeg_ch_names = [i+j for i in prefixes for j in eeg_ch_names]
+    signal = raw.copy().crop(tmin=tmin, tmax=tmax)
+    
+    psd_epochs = mne.make_fixed_length_epochs(signal, duration = t_seg, overlap = t_overlap)
+    
+    psd_results = psd_epochs.compute_psd(
+        method='welch', 
+        fmin=l_freq, 
+        fmax=h_freq,
+        window='hann',
+        n_fft=int(len(psd_epochs.times)))
+    
+    abs_arr_psd = np.sum(np.abs(psd_results.get_data()), axis = 2) #Absolute PSD Calculated here
+    
+    return abs_arr_psd.T
         
-theta_data_rest = abs_power_extraction(eeg_data, fs, 4, 8, 0, eeg_newseg1)
-theta_data_stress = abs_power_extraction(eeg_data, fs, 4, 8, eeg_newseg1, eeg_newseg2)
-theta_data_rest2 = abs_power_extraction(eeg_data, fs, 4, 8, eeg_newseg2, eeg_newseg3)
+theta_data_rest = welch_extraction_mne(raw, 4, 8, 0, eeg_newseg1)
+theta_data_stress = welch_extraction_mne(raw, 4, 8, eeg_newseg1, eeg_newseg2)
+theta_data_rest2 = welch_extraction_mne(raw, 4, 8, eeg_newseg2, eeg_newseg3)
 
-alpha_data_rest = abs_power_extraction(eeg_data, fs, 8, 12, 0, eeg_newseg1)
-alpha_data_stress = abs_power_extraction(eeg_data, fs, 8, 12, eeg_newseg1, eeg_newseg2)
-alpha_data_rest2 = abs_power_extraction(eeg_data, fs, 8, 12, eeg_newseg2, eeg_newseg3)
+alpha_data_rest = welch_extraction_mne(raw, 8, 12, 0, eeg_newseg1)
+alpha_data_stress = welch_extraction_mne(raw, 8, 12, eeg_newseg1, eeg_newseg2)
+alpha_data_rest2 = welch_extraction_mne(raw, 8, 12, eeg_newseg2, eeg_newseg3)
 
-beta_data_rest = abs_power_extraction(eeg_data, fs, 12, 30, 0, eeg_newseg1)
-beta_data_stress = abs_power_extraction(eeg_data, fs, 12, 30, eeg_newseg1, eeg_newseg2)
-beta_data_rest2 = abs_power_extraction(eeg_data, fs, 12, 30, eeg_newseg2, eeg_newseg3)
+beta_data_rest = welch_extraction_mne(raw, 12, 30, 0, eeg_newseg1)
+beta_data_stress = welch_extraction_mne(raw, 12, 30, eeg_newseg1, eeg_newseg2)
+beta_data_rest2 = welch_extraction_mne(raw, 12, 30, eeg_newseg2, eeg_newseg3)
 
-gamma_data_rest = abs_power_extraction(eeg_data, fs, 30, 45, 0, eeg_newseg1)
-gamma_data_stress = abs_power_extraction(eeg_data, fs, 30, 45, eeg_newseg1, eeg_newseg2)
-gamma_data_rest2 = abs_power_extraction(eeg_data, fs, 30, 45, eeg_newseg2, eeg_newseg3)
+gamma_data_rest = welch_extraction_mne(raw, 30, 45, 0, eeg_newseg1)
+gamma_data_stress = welch_extraction_mne(raw, 30, 45, eeg_newseg1, eeg_newseg2)
+gamma_data_rest2 = welch_extraction_mne(raw, 30, 45, eeg_newseg2, eeg_newseg3)
 
 data_list_rest = np.concatenate((theta_data_rest,alpha_data_rest,beta_data_rest,gamma_data_rest))
 data_list_stress = np.concatenate((theta_data_stress,alpha_data_stress,beta_data_stress,gamma_data_stress))
@@ -154,16 +134,15 @@ label_str_stress = len(data_list_stress[0]) * ['Stress']
 label_str_rest2 = len(data_list_rest2[0]) * ['Rest 2']
 
 if second_rest:
-    feature = np.concatenate((data_list_rest,data_list_stress, data_list_rest2), axis = 1)
+    feature_arr = np.concatenate((data_list_rest,data_list_stress, data_list_rest2), axis = 1)
     label = np.concatenate((label_rest, label_stress, label_rest2))
     label_str = np.concatenate((label_str_rest, label_str_stress, label_str_rest2))
-    feature = feature.T
+    feature_arr = feature_arr.T
 else:
-    feature = np.concatenate((data_list_rest,data_list_stress), axis = 1)
+    feature_arr = np.concatenate((data_list_rest,data_list_stress), axis = 1)
     label = np.concatenate((label_rest, label_stress))
     label_str = np.concatenate((label_str_rest, label_str_stress))    
-
-    feature = feature.T
+    feature_arr = feature_arr.T
 ###############################################################################
 
 from scipy.stats import ttest_ind
@@ -181,7 +160,7 @@ for i in range(len(p_value)):
 
 ###############################################################################
 ############################# DATA FRAME FEATURE #############################
-features = pd.DataFrame(feature, columns = new_eeg_ch_names)
+features = pd.DataFrame(feature_arr, columns = new_eeg_ch_names)
 labels = pd.DataFrame(label, columns= ['label'])
 labels_str = pd.DataFrame(label_str, columns=['status'])
 

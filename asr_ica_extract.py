@@ -18,7 +18,8 @@ fpath = ['20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001.vhdr',
 
 
 folder_filtered_asr = "filtered_data_asr"
-folder_filtered_asr20 = "filtered_data_asr20"
+# folder_filtered_asr20 = "filtered_data_asr20"
+folder_filtered_eog = "filtered_data_ica_eog"
 folder_filtered_ica = "filtered_data_ica_all"
 
 directory_path = "D:/EEG RESEARCH DATA"
@@ -72,7 +73,7 @@ def save_eeg_asr(directory, cutoff= 5):
 for i in fpath:
     save_eeg_asr(i)
 
-def save_eeg_ica(directory):
+def save_eeg_ica(directory, eog_only = False):
     raw = mne.io.read_raw_brainvision(directory, preload = True)
     # raw = mne.io.read_raw_brainvision(path[file_number], preload = True)
     
@@ -110,24 +111,16 @@ def save_eeg_ica(directory):
 
     labels = ic_labels["labels"]
     
-    exclude_idx = [
-        idx for idx, label in enumerate(labels) if label not in ["brain", "other"]
-    ]
-    print(f"Excluding these ICA components: {exclude_idx}")
-    
-    # eog_indices = [idx for idx, label in enumerate(labels) if label in ["eye blink"]]
-    # eog_cfa_indices = [idx for idx, label in enumerate(labels) if label in ["eye blink","heart beat"]]
-
-    # if "heart beat" not in labels:
-    #     print("No CFA Detected in %s" % file_name)
-
-    # ica.exclude = eog_indices
-    # reconst_raw_eog = filt_raw.copy()
-    # ica.apply(reconst_raw_eog)
-
-    # ica.exclude = eog_cfa_indices
-    # reconst_raw_cfa = filt_raw.copy()
-    # ica.apply(reconst_raw_cfa)
+    if eog_only == False:
+        exclude_idx = [
+            idx for idx, label in enumerate(labels) if label not in ["brain", "other"]
+        ]
+        print(f"Excluding All Noise ICA components: {exclude_idx}")
+    else:
+        exclude_idx = [
+            idx for idx, label in enumerate(labels) if label in ["eye blink"]
+        ]
+        print(f"Excluding Only EOG ICA components: {exclude_idx}")
     
     ica.exclude = exclude_idx
     reconst_raw = filt_raw.copy()
@@ -136,10 +129,16 @@ def save_eeg_ica(directory):
     _, file_name = os.path.split(directory)
     # reconst_raw_eog.save(os.path.join(folder_filtered_eog,file_name.replace(".vhdr", "-ica.fif")), overwrite=True)
     # reconst_raw_cfa.save(os.path.join(folder_filtered_cfa,file_name.replace(".vhdr", "-ica.fif")), overwrite=True)
-    reconst_raw.save(os.path.join(folder_filtered_ica,file_name.replace(".vhdr", "-ica.fif")), overwrite=True)
+    if eog_only == False:
+        reconst_raw.save(os.path.join(folder_filtered_ica,file_name.replace(".vhdr", "-ica.fif")), overwrite=True)
+    else:
+        reconst_raw.save(os.path.join(folder_filtered_eog,file_name.replace('.vhdr', '-eog_reject_ica.fif')), overwrite=True)
     del(raw,events,event_ids,montage,fs,tmin,tmax,filt_raw,ica,ic_labels,labels,
         exclude_idx,reconst_raw,file_name)
     
 for i in fpath:
-    save_eeg_ica(i)
+    save_eeg_ica(i) #Save data which reject all Noises
+
+for i in fpath:
+    save_eeg_ica(i, True) #Save data which only reject EOG ICA
 
