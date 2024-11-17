@@ -23,11 +23,18 @@ os.chdir(directory_path)
 include_second_rest = False
 data_type = 'stats_segmented' #option is stats, stats_segmented, amplitude
 
+if data_type == 'amplitude':
+    metrics = 'amplitude' 
+else:
+    metrics = 'std' #option is avg, std, med, all
+
 only_twave = True #IF True, better make n_segment = 2, if False, n_segment = 8
-stats = 'avg' #option is amplitude, avg, std, med, all
+
 filt_30 = False
 if only_twave:
-    n_segment = 4
+    epo_tmin = 0.2
+    epo_tmax = 0.6
+    n_segment = int((epo_tmax-epo_tmin)*10) #To split each segment into equally 0.1 segment
 else:
     n_segment = 8
 
@@ -73,9 +80,9 @@ epoch_stress = load_epoch_stress(fnum)
 epoch_rest2 = load_epoch_rest2(fnum)
 
 if only_twave == True:
-    epoch_rest = epoch_rest.crop(tmin = 0.2, tmax = 0.6)
-    epoch_stress = epoch_stress.crop(tmin = 0.2, tmax = 0.6)
-    epoch_rest2 = epoch_rest2.crop(tmin = 0.2, tmax = 0.6)
+    epoch_rest = epoch_rest.crop(tmin = epo_tmin, tmax = epo_tmax)
+    epoch_stress = epoch_stress.crop(tmin = epo_tmin, tmax = epo_tmax)
+    epoch_rest2 = epoch_rest2.crop(tmin = epo_tmin, tmax = epo_tmax)
 
 array_rest = epoch_rest.get_data()
 array_stress = epoch_stress.get_data()
@@ -114,16 +121,16 @@ def feature_extract(epoch_array, n_segment, data_type):
         segment_array_med = np.array(segment_array_med).T
         segment_feature = np.concatenate((segment_array_avg,segment_array_std, segment_array_med), axis=1)
         
-        if stats == 'all':        
+        if metrics == 'all':        
             return(segment_feature)
             
-        elif stats == 'avg':
+        elif metrics == 'avg':
             return(segment_array_avg)
             
-        elif stats == 'std':
+        elif metrics == 'std':
             return(segment_array_std)
         
-        elif stats == 'med':
+        elif metrics == 'med':
             return(segment_array_med)
     
     elif data_type == 'stats':
@@ -132,41 +139,41 @@ def feature_extract(epoch_array, n_segment, data_type):
         med_feature = np.median(epoch_array, axis=-1)
         feature = np.concatenate((avg_feature, std_feature, med_feature), axis=1)
         
-        if stats == 'all':
+        if metrics == 'all':
             return(feature)
         
-        elif stats == 'avg':
+        elif metrics == 'avg':
             return(avg_feature)
         
-        elif stats == 'std':
+        elif metrics == 'std':
             return(std_feature)
         
-        elif stats == 'med':
+        elif metrics == 'med':
             return(med_feature)
     
     elif data_type == 'amplitude':
         array_amplitude = np.concatenate((epoch_array), axis = 1)
-        return(array_amplitude)
+        return(array_amplitude.T)
         
 
-def ch_name_extract(epoch_array, stats ='all'):
+def ch_name_extract(epoch_array, metrics ='all'):
     
     eeg_ch_names = epoch_array.ch_names
     ch_names = []
     
-    if stats =='all':
+    if metrics =='all':
         prefixes = ["average.ch.", "std.ch.", "med.ch."]
   
-    elif stats =='avg':
+    elif metrics =='avg':
         prefixes = ["average.ch."]
     
-    elif stats =='std':
+    elif metrics =='std':
         prefixes = ["std.ch."]
         
-    elif stats =='med':
+    elif metrics =='med':
         prefixes = ["med.ch."]
     
-    elif stats =='amplitude':
+    elif metrics =='amplitude':
         prefixes = ["amplitude.ch."]
 
     for i in prefixes:
@@ -196,7 +203,7 @@ else:
     label = np.concatenate((label_rest, label_stress))
     label_str = np.concatenate((label_str_rest, label_str_stress))    
 
-ch_names = ch_name_extract(epoch_rest, stats)
+ch_names = ch_name_extract(epoch_rest, metrics)
 
 features = pd.DataFrame(feature, columns = ch_names)
 labels = pd.DataFrame(label, columns= ['label'])
@@ -211,8 +218,8 @@ display(df)
 # X_5 = df[['status','std.ch.F3','std.ch.F1','std.ch.Fz','std.ch.F2','std.ch.F6']] #For data num 0
 # df_5features = labels_str.join(X_5)
 
-# X = df.filter(like='ch')
-X = df.filter(like='ch.Fz')
+X = df.filter(like='ch')
+# X = df.filter(like='ch.Fz')
 y = np.ravel(df.filter(like='label'))
 # y = df.filter(like='label')
 
@@ -308,35 +315,35 @@ print(classification_report(y,y_pred))
 # print(y_permut)
 
 #######Plot LDA on each Fold#######
-# fold_idx = 1
-# for train_idx, test_idx in skf.split(X, y):
-#     print(len(train_idx), len(test_idx))
+fold_idx = 1
+for train_idx, test_idx in skf.split(X, y):
+    print(len(train_idx), len(test_idx))
     
-#     # Use .iloc[] for DataFrame and [] for numpy arrays
-#     X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]  # X is a pandas DataFrame
-#     y_train, y_test = y[train_idx], y[test_idx]  # y is a numpy array
+    # Use .iloc[] for DataFrame and [] for numpy arrays
+    X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]  # X is a pandas DataFrame
+    y_train, y_test = y[train_idx], y[test_idx]  # y is a numpy array
     
-#     # Fit the pipeline on the training set
-#     pipe.fit(X_train, y_train)
+    # Fit the pipeline on the training set
+    pipe.fit(X_train, y_train)
     
-#     # Transform the data
-#     X_train_lda = pipe.transform(X_train)
-#     X_test_lda = pipe.transform(X_test)
+    # Transform the data
+    X_train_lda = pipe.transform(X_train)
+    X_test_lda = pipe.transform(X_test)
     
-#     # Plot LDA for this fold
-#     plt.figure()
-#     for i in np.unique(y_train):
-#         plt.scatter(X_train_lda[y_train == i], np.zeros_like(X_train_lda[y_train == i]), alpha=.8, label=f'Class {i} (train)')
-#     for i in np.unique(y_test):
-#         plt.scatter(X_test_lda[y_test == i], np.zeros_like(X_test_lda[y_test == i])-0.05, alpha=.8, label=f'Class {i} (test)')
+    # Plot LDA for this fold
+    plt.figure()
+    for i in np.unique(y_train):
+        plt.scatter(X_train_lda[y_train == i], np.zeros_like(X_train_lda[y_train == i]), alpha=.8, label=f'Class {i} (train)')
+    for i in np.unique(y_test):
+        plt.scatter(X_test_lda[y_test == i], np.zeros_like(X_test_lda[y_test == i])-0.05, alpha=.8, label=f'Class {i} (test)')
     
-#     plt.legend(loc='best', shadow=False)
-#     plt.yticks([])  # No need for y-axis ticks in 1D plot
-#     plt.title(f'LDA of dataset for fold {fold_idx}')
-#     plt.xlabel('Linear Discriminant')
-#     plt.show()
+    plt.legend(loc='best', shadow=False)
+    plt.yticks([])  # No need for y-axis ticks in 1D plot
+    plt.title(f'LDA of dataset for fold {fold_idx}')
+    plt.xlabel('Linear Discriminant')
+    plt.show()
 
-#     fold_idx += 1
+    fold_idx += 1
 #######Plot LDA on each Fold#######
 
 ################################ CLASSIFICATION 1 ################################
