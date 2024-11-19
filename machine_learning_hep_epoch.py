@@ -21,16 +21,13 @@ os.chdir(directory_path)
 ##################### Define What I need in here #####################
     
 include_second_rest = False
-data_type = 'stats_segmented' #option is stats, stats_segmented, amplitude
+segmented = True #option is stats, stats_segmented
 
-if data_type == 'amplitude':
-    metrics = 'amplitude' 
-else:
-    metrics = 'std' #option is avg, std, med, all
+metrics = ['std','sum'] #write in list. Option: avg, std, med
 
 only_twave = True #IF True, better make n_segment = 2, if False, n_segment = 8
-
 filt_30 = False
+
 if only_twave:
     epo_tmin = 0.2
     epo_tmax = 0.6
@@ -88,7 +85,7 @@ array_rest = epoch_rest.get_data()
 array_stress = epoch_stress.get_data()
 array_rest2 = epoch_rest2.get_data()
 
-def feature_extract(epoch_array, n_segment, data_type):
+def feature_extract(epoch_array, n_segment, segmented = True):
     
     n_epoch = epoch_array.shape[0]
     n_ch = epoch_array.shape[1]
@@ -96,10 +93,12 @@ def feature_extract(epoch_array, n_segment, data_type):
     
     segment_length = n_signal // n_segment
     
-    if data_type == 'stats_segmented':    
+    
+    if segmented == True:    
         segment_array_avg = np.zeros((n_ch, n_segment *n_epoch +1))
         segment_array_std = np.zeros((n_ch, n_segment *n_epoch +1))
         segment_array_med = np.zeros((n_ch, n_segment *n_epoch +1))
+        segment_array_sum = np.zeros((n_ch, n_segment *n_epoch +1))
         
         for i in range(n_epoch):
             data_epoch = epoch_array[i]
@@ -110,81 +109,67 @@ def feature_extract(epoch_array, n_segment, data_type):
                     avg_segment = np.average(segment)
                     std_segment = np.std(segment)
                     med_segment = np.median(segment)
+                    sum_segment = np.sum(np.abs(segment))
                     
                     segment_array_avg[j,segment_index + (n_segment*i)] = avg_segment
                     segment_array_std[j,segment_index + (n_segment*i)] = std_segment
                     segment_array_med[j,segment_index + (n_segment*i)] = med_segment
+                    segment_array_sum[j,segment_index + (n_segment*i)] = sum_segment
                     segment_index +=1
         
         segment_array_avg = np.array(segment_array_avg).T
         segment_array_std = np.array(segment_array_std).T
         segment_array_med = np.array(segment_array_med).T
-        segment_feature = np.concatenate((segment_array_avg,segment_array_std, segment_array_med), axis=1)
+        segment_array_sum = np.array(segment_array_sum).T
+
+        segmented_metric_map = {
+                'avg': segment_array_avg,
+                'std': segment_array_std,
+                'med': segment_array_med,
+                'sum': segment_array_sum
+                }
         
-        if metrics == 'all':        
-            return(segment_feature)
-            
-        elif metrics == 'avg':
-            return(segment_array_avg)
-            
-        elif metrics == 'std':
-            return(segment_array_std)
+        selected_metrics = [segmented_metric_map[m] for m in metrics]
+        return(np.concatenate(selected_metrics, axis=1))
         
-        elif metrics == 'med':
-            return(segment_array_med)
     
-    elif data_type == 'stats':
+    else:
         avg_feature = np.mean(epoch_array, axis=-1)
         std_feature = np.std(epoch_array, axis=-1)
         med_feature = np.median(epoch_array, axis=-1)
-        feature = np.concatenate((avg_feature, std_feature, med_feature), axis=1)
+        sum_feature = np.sum(np.abs(epoch_array), axis=-1)
         
-        if metrics == 'all':
-            return(feature)
-        
-        elif metrics == 'avg':
-            return(avg_feature)
-        
-        elif metrics == 'std':
-            return(std_feature)
-        
-        elif metrics == 'med':
-            return(med_feature)
-    
-    elif data_type == 'amplitude':
-        array_amplitude = np.concatenate((epoch_array), axis = 1)
-        return(array_amplitude.T)
-        
+        metric_map = {
+                'avg': avg_feature,
+                'std': std_feature,
+                'med': med_feature,
+                'sum': sum_feature
+            }
+
+        selected_metrics = [metric_map[m] for m in metrics]
+        return(np.concatenate(selected_metrics, axis=1))
+
 
 def ch_name_extract(epoch_array, metrics ='all'):
     
     eeg_ch_names = epoch_array.ch_names
-    ch_names = []
     
-    if metrics =='all':
-        prefixes = ["average.ch.", "std.ch.", "med.ch."]
-  
-    elif metrics =='avg':
-        prefixes = ["average.ch."]
+    prefixes_map = {
+            'avg': "average.ch.",
+            'std': "std.ch.",
+            'med': "med.ch.",
+            'sum': "sum.ch."
+        }
     
-    elif metrics =='std':
-        prefixes = ["std.ch."]
-        
-    elif metrics =='med':
-        prefixes = ["med.ch."]
-    
-    elif metrics =='amplitude':
-        prefixes = ["amplitude.ch."]
+    prefixes = [prefixes_map[m] for m in metrics]
 
-    for i in prefixes:
-        for j in eeg_ch_names:
-            ch_names.append(i+j)
+    ch_names = [i+j for i in prefixes for j in eeg_ch_names]
     
     return(ch_names)
 
-feature_rest = feature_extract(array_rest, n_segment, data_type)
-feature_stress = feature_extract(array_stress, n_segment, data_type)
-feature_rest2 = feature_extract(array_rest2, n_segment, data_type)
+feature_rest = feature_extract(array_rest, n_segment, segmented)
+feature_stress = feature_extract(array_stress, n_segment, segmented)
+feature_rest2 = feature_extract(array_rest2, n_segment, segmented)
 
 label_rest = len(feature_rest) * [0]
 label_stress = len(feature_stress) * [1]
@@ -237,11 +222,12 @@ p_value_data = np.vstack(np.array(([ch_names, np.squeeze(p_value)]))).T
 ###############################################################################
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import KFold, GridSearchCV, StratifiedKFold
-from sklearn.svm import LinearSVC
+from sklearn.model_selection import StratifiedKFold
+from sklearn.svm import SVC
 from sklearn.model_selection import cross_val_score, cross_val_predict,permutation_test_score
 from sklearn.metrics import classification_report, roc_auc_score, confusion_matrix, accuracy_score
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.decomposition import PCA
 import umap.umap_ as mp
 import seaborn as sns
 ###############################################################################
@@ -292,8 +278,9 @@ scl = StandardScaler()
 n_splits = 5
 # gkf = KFold(n_splits = n_splits)
 skf = StratifiedKFold(n_splits = n_splits)
-# tscv = TimeSeriesSplit(n_splits = n_splits)
 # pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
+# pca = PCA(n_components = 2, random_state=99)
+# pipe = Pipeline([('scl',scl),('pca', pca),('clf',clf)])
 umap = mp.UMAP(random_state=99)
 pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
 pipe.fit(X,y)
@@ -349,13 +336,14 @@ for train_idx, test_idx in skf.split(X, y):
 ################################ CLASSIFICATION 1 ################################
 
 ################################ CLASSIFICATION 2 ################################
-from sklearn.svm import SVC
 
 clf = SVC(kernel='linear')
 n_splits = 5
 scl = StandardScaler()
-gkf = KFold(n_splits = n_splits)
+# gkf = KFold(n_splits = n_splits)
 skf = StratifiedKFold(n_splits = n_splits)
+# pca = PCA(n_components = 2, random_state=99)
+# pipe = Pipeline([('scl',scl),('pca', pca),('clf',clf)])
 umap = mp.UMAP(random_state=99)
 pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
 # pipe = Pipeline([('scl',StandardScaler()),('clf',clf)])
@@ -384,58 +372,61 @@ print(classification_report(y,y_pred))
 # print(cm)
 
 #######Plot SVM#######
-# from matplotlib.colors import ListedColormap
+from matplotlib.colors import ListedColormap
 
-# fold_idx = 1
-# for train_idx, test_idx in skf.split(X, y):
-#     print(len(train_idx), len(test_idx))
-#     # Use .iloc[] for DataFrame and [] for numpy arrays
-#     X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]  # X is a pandas DataFrame
-#     y_train, y_test = y[train_idx], y[test_idx]  # y is a numpy array
+fold_idx = 1
+for train_idx, test_idx in skf.split(X, y):
+    print(len(train_idx), len(test_idx))
+    # Use .iloc[] for DataFrame and [] for numpy arrays
+    X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]  # X is a pandas DataFrame
+    y_train, y_test = y[train_idx], y[test_idx]  # y is a numpy array
     
-#     #### Scaled and Classified 1 by 1 ####
-#     X_train_scaled = scl.fit_transform(X_train,y_train)
-#     X_test_scaled = scl.transform(X_test)
+    #### Scaled and Classified 1 by 1 ####
+    X_train_scaled = scl.fit_transform(X_train,y_train)
+    X_test_scaled = scl.transform(X_test)
     
-#     X_train_reduced = umap.fit_transform(X_train_scaled,y_train)
-#     X_test_reduced = umap.transform(X_test_scaled)
+    X_train_reduced = umap.fit_transform(X_train_scaled,y_train)
+    X_test_reduced = umap.transform(X_test_scaled)
     
-#     clf.fit(X_train_reduced, y_train)
-
-#     x_min, x_max = X_test_reduced[:, 0].min() - 1, X_test_reduced[:, 0].max() + 1
-#     y_min, y_max = X_test_reduced[:, 1].min() - 1, X_test_reduced[:, 1].max() + 1
-#     xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.02),
-#                           np.arange(y_min, y_max, 0.02))
-
-#     grid = np.c_[xx.ravel(), yy.ravel()]
-#     Z = np.reshape(clf.predict(grid), xx.shape)
-
-#     plt.figure()
-#     plt.contourf(xx, yy, Z, alpha=0.3,cmap = ListedColormap(('green','red')))
-#     plt.xlim(xx.min(),xx.max())
-#     plt.ylim(yy.min(),yy.max())
-
-#     for i,j in enumerate(np.unique(y_train)):
-#         if j == 0:
-#             label = 'Rest_train'
-#         else:
-#             label = 'Stress_train'
-#         plt.scatter(X_train_reduced[y_train ==j,0],X_train_reduced[y_train==j,1],
-#                     c=ListedColormap(('limegreen','lightcoral'))(i),label=label)
+    # X_train_reduced = pca.fit_transform(X_train_scaled,y_train)
+    # X_test_reduced = pca.transform(X_test_scaled)
     
-#     for i,j in enumerate(np.unique(y_test)):
-#         if j == 0:
-#             label = 'Rest_test'
-#         else:
-#             label = 'Stress_test'
-#         plt.scatter(X_test_reduced[y_test ==j,0],X_test_reduced[y_test==j,1],
-#                     c=ListedColormap(('green','red'))(i),label=label)
-    
-#     plt.legend()
-#     plt.title(f'Decision Boundary for Linear SVC fold {fold_idx}')
-#     plt.show()
+    clf.fit(X_train_reduced, y_train)
 
-#     fold_idx+=1
+    x_min, x_max = X_test_reduced[:, 0].min() - 1, X_test_reduced[:, 0].max() + 1
+    y_min, y_max = X_test_reduced[:, 1].min() - 1, X_test_reduced[:, 1].max() + 1
+    xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.02),
+                          np.arange(y_min, y_max, 0.02))
+
+    grid = np.c_[xx.ravel(), yy.ravel()]
+    Z = np.reshape(clf.predict(grid), xx.shape)
+
+    plt.figure()
+    plt.contourf(xx, yy, Z, alpha=0.3,cmap = ListedColormap(('green','red')))
+    plt.xlim(xx.min(),xx.max())
+    plt.ylim(yy.min(),yy.max())
+
+    for i,j in enumerate(np.unique(y_train)):
+        if j == 0:
+            label = 'Rest_train'
+        else:
+            label = 'Stress_train'
+        plt.scatter(X_train_reduced[y_train ==j,0],X_train_reduced[y_train==j,1],
+                    c=ListedColormap(('limegreen','lightcoral'))(i),label=label)
+    
+    for i,j in enumerate(np.unique(y_test)):
+        if j == 0:
+            label = 'Rest_test'
+        else:
+            label = 'Stress_test'
+        plt.scatter(X_test_reduced[y_test ==j,0],X_test_reduced[y_test==j,1],
+                    c=ListedColormap(('green','red'))(i),label=label)
+    
+    plt.legend()
+    plt.title(f'Decision Boundary for Linear SVC fold {fold_idx}')
+    plt.show()
+
+    fold_idx+=1
 #######Plot SVM#######
 
 ################################ CLASSIFICATION 2 ################################
