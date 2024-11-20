@@ -26,9 +26,13 @@ fpath_ica=[i for i in os.listdir(folder_ica)]
 folder_ica_eog = "filtered_data_ica_eog"
 fpath_ica_eog=[i for i in os.listdir(folder_ica_eog)]
 
+folder_ecg = "ecg_data"
+fpath_ecg=[i for i in os.listdir(folder_ecg)]
+
 folder_epoch_asr = "hep_asr"
 folder_epoch_ica = "hep_ica_all"
 folder_epoch_ica_eog = "hep_ica_eog"
+folder_epoch_ecg = "ecg_epoch"
 
 
 #####################################################
@@ -269,36 +273,37 @@ for i in range(len(fpath_raw)):
         secondrest_events = epoch_events[(epoch_events[:, 0] >= trg2)]
           
         # Creating epochs
-        # hep_epoch = mne.Epochs(raw,
-        #                        events=epoch_events,
-        #                        tmin=epoch_tmin, 
-        #                        tmax=epoch_tmax, 
-        #                        baseline=baseline
-        #                        )
-        drop = dict(eeg = 100e-6)
+        hep_epoch = mne.Epochs(raw,
+                                events=epoch_events,
+                                tmin=epoch_tmin, 
+                                tmax=epoch_tmax, 
+                                baseline=baseline
+                                )
+        # drop = dict(eeg = 100e-6)
         
         firstrest_epoch = mne.Epochs(firstrest,
                                      events=firstrest_events, 
                                      tmin=epoch_tmin, 
                                      tmax=epoch_tmax, 
                                      baseline=baseline,
-                                     reject=drop
+                                     # reject=drop
                                      )
         stress_epoch = mne.Epochs(stress,
                                   events=stress_events, 
                                   tmin=epoch_tmin, 
                                   tmax=epoch_tmax, 
                                   baseline=baseline,
-                                  reject=drop
+                                  # reject=drop
                                   )
         secondrest_epoch = mne.Epochs(secondrest,
                                       events=secondrest_events, 
                                       tmin=epoch_tmin, 
                                       tmax=epoch_tmax, 
                                       baseline=baseline,
-                                      reject=drop
+                                      # reject=drop
                                       )
-
+        
+        hep_epoch.save(os.path.join(folder_save,file_dir.replace(".fif", "-all-epo.fif")), overwrite=True)
         firstrest_epoch.save(os.path.join(folder_save,file_dir.replace(".fif", "-first-epo.fif")), overwrite=True)
         stress_epoch.save(os.path.join(folder_save,file_dir.replace(".fif", "-stress-epo.fif")), overwrite=True)
         secondrest_epoch.save(os.path.join(folder_save,file_dir.replace(".fif", "-second-epo.fif")), overwrite=True)
@@ -308,6 +313,7 @@ for i in range(len(fpath_raw)):
 
     # save_hep(folder_asr,fpath_asr[counter],folder_epoch_asr,r_peak_events)
     # save_hep(folder_ica,fpath_ica[counter],folder_epoch_ica,r_peak_events)
-    save_hep(folder_ica_eog,fpath_ica_eog[counter],folder_epoch_ica_eog,r_peak_events)
+    # save_hep(folder_ica_eog,fpath_ica_eog[counter],folder_epoch_ica_eog,r_peak_events)
+    save_hep(folder_ecg,fpath_ecg[counter],folder_epoch_ecg,r_peak_events)
     
     
