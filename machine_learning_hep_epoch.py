@@ -215,9 +215,9 @@ from scipy.stats import ttest_ind
 t_test_data = ttest_ind(feature_rest,feature_stress)
 print(t_test_data.pvalue)
 
-p_value = t_test_data.pvalue
+p_value = t_test_data.pvalue;
 
-p_value_data = np.vstack(np.array(([ch_names, np.squeeze(p_value)]))).T
+p_value_data = np.vstack(np.array(([ch_names, np.squeeze(p_value)]))).T;
 
 ###############################################################################
 from sklearn.pipeline import Pipeline
