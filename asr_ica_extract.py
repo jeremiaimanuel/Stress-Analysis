@@ -1,8 +1,8 @@
 import mne
 import os
 import asrpy
-from mne.preprocessing import read_ica
-from mne_icalabel import label_components
+# from mne.preprocessing import read_ica
+# from mne_icalabel import label_components
 
 
 fpath = ['20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001.vhdr',
@@ -18,14 +18,14 @@ fpath = ['20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001.vhdr',
 
 
 folder_filtered_asr = "filtered_data_asr"
-# folder_filtered_asr20 = "filtered_data_asr20"
+folder_filtered_asr20 = "filtered_data_asr20"
 folder_filtered_eog = "filtered_data_ica_eog"
 folder_filtered_ica = "filtered_data_ica_all"
 
 directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
 
-def save_eeg_asr(directory, cutoff= 5):
+def save_eeg_asr(directory, cutoff= 5, mem_split = 50):
     raw = mne.io.read_raw_brainvision(directory, preload = True)
     # raw = mne.io.read_raw_brainvision(path[file_number], preload = True)
     
@@ -61,7 +61,7 @@ def save_eeg_asr(directory, cutoff= 5):
     print('asr: defined')
     asr.fit(raw_asr)
     print('asr: fited')
-    raw_asr = asr.transform(raw_asr)
+    raw_asr = asr.transform(raw_asr, mem_splits = mem_split)
     print('asr: transformed')
 
     _, file_name = os.path.split(directory)
@@ -70,8 +70,10 @@ def save_eeg_asr(directory, cutoff= 5):
     elif cutoff == 20:
         raw_asr.save(os.path.join(folder_filtered_asr20,file_name.replace(".vhdr", "-asr.fif")), overwrite=True)
 
+# save_eeg_asr(fpath[0], 20, 50)
+
 for i in fpath:
-    save_eeg_asr(i)
+    save_eeg_asr(i,20,50)
 
 def save_eeg_ica(directory, eog_only = False):
     raw = mne.io.read_raw_brainvision(directory, preload = True)
