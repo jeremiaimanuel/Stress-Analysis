@@ -26,5 +26,7 @@ data_arr_2 = data_2.get_data()
 data_arr_3 = data_3.get_data()
 
 corr = [pearsonr(data_arr_2[i],data_arr_3[i]) for i in range(len(data_arr_2))]
+corr = [pearsonr(data_arr_1[i],data_arr_2[i]) for i in range(len(data_arr_2))]
 corr = pearsonr(data_arr_1,data_arr_2)
 
+arr_corr = [i[0] for i in corr]

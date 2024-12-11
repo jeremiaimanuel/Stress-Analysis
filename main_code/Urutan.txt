@@ -1,0 +1,16 @@
+eeg_ica_visualization buat save ica dulu
+
+
+ASR data:
+raw data -> asr_ica_extract.py -> machine learning psd
+
+ICA data:
+raw data -> eeg_ica_visualization.py untuk extract ICs components -> asr_ica_extract.py -> machine learning psd
+
+ASR data:
+raw data -> asr_ica_extract.py -> 
+
+
+
+ICA data:
+raw data -> eeg_ica_visualization.py untuk extract ICs components -> asr_ica_extract.py -> machine learning psd
