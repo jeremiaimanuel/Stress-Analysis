@@ -179,9 +179,9 @@ save_hep(folder_ica,fpath_ica[counter],folder_epoch_ica,r_peak_events)
 
 
 #####################################################
-# for i in range(len(fpath_raw)):
+for i in range(len(fpath_raw)):
 # data = [fpath_raw[10],fpath_raw[11],fpath_raw[12],fpath_raw[13]]
-for i in range(10,13):
+# for i in range(10,13):
     counter = i
 
     raw = mne.io.read_raw_brainvision(os.path.join(folder_raw, fpath_raw[counter]))

@@ -39,8 +39,8 @@ else:
 
 ##################### Define What I need in here #####################
 
-# fpath = 'hep_asr'
-fpath = 'hep_ica_all'
+fpath = 'hep_asr'
+# fpath = 'hep_ica_all'
 
 rest1_data = [os.path.join(fpath,i) for i in os.listdir(fpath) if i.endswith('first-epo.fif')]
 stress_data = [os.path.join(fpath,i) for i in os.listdir(fpath) if i.endswith('stress-epo.fif')]
@@ -70,8 +70,8 @@ svm_roc=[]
 # dataset_used1 = []
 # dataset_used2 = []
 
-for fnum in range(len(rest1_data)):
-# for fnum in range(10,14):
+# for fnum in range(len(rest1_data)):
+for fnum in range(9,14):
         
     epoch_rest = load_epoch_rest1(fnum)
     epoch_stress = load_epoch_stress(fnum)
@@ -194,26 +194,26 @@ for fnum in range(len(rest1_data)):
     
     ################################ CLASSIFICATION 1 ################################
     
-    # clf = LinearDiscriminantAnalysis()
-    # scl = StandardScaler()
-    # n_splits = 5
-    # # gkf = KFold(n_splits = n_splits)
-    # skf = StratifiedKFold(n_splits = n_splits)
-    # # umap = mp.UMAP(random_state=99)
-    # # pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
-    # # tscv = TimeSeriesSplit(n_splits = n_splits)
-    # pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
-    # pipe.fit_transform(X,y)
+    clf = LinearDiscriminantAnalysis()
+    scl = StandardScaler()
+    n_splits = 5
+    # gkf = KFold(n_splits = n_splits)
+    skf = StratifiedKFold(n_splits = n_splits)
+    # umap = mp.UMAP(random_state=99)
+    # pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
+    # tscv = TimeSeriesSplit(n_splits = n_splits)
+    pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
+    pipe.fit_transform(X,y)
     
-    # acc_scores_lda = cross_val_score(pipe, X, y, cv=skf, scoring='accuracy')
-    # # print(acc_scores_lda)
-    # lda_accuracy.append(acc_scores_lda.mean())
-    # # print("%0.2f LDA accuracy with a standard deviation of %0.2f from dataset %d" % (acc_scores_lda.mean(), acc_scores_lda.std(),fnum))
+    acc_scores_lda = cross_val_score(pipe, X, y, cv=skf, scoring='accuracy')
+    # print(acc_scores_lda)
+    lda_accuracy.append(acc_scores_lda.mean())
+    # print("%0.2f LDA accuracy with a standard deviation of %0.2f from dataset %d" % (acc_scores_lda.mean(), acc_scores_lda.std(),fnum))
     
-    # roc_scores_lda = cross_val_score(pipe, X, y, cv=skf, scoring='roc_auc')
-    # # print(roc_scores_lda)
-    # lda_roc.append(roc_scores_lda.mean())
-    # # print("LDA ROC AUC Score:%0.2f from dataset %d" % (roc_scores_lda.mean(),fnum))
+    roc_scores_lda = cross_val_score(pipe, X, y, cv=skf, scoring='roc_auc')
+    # print(roc_scores_lda)
+    lda_roc.append(roc_scores_lda.mean())
+    # print("LDA ROC AUC Score:%0.2f from dataset %d" % (roc_scores_lda.mean(),fnum))
     
     ################################ CLASSIFICATION 1 ################################
     
