@@ -24,8 +24,8 @@ directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
 
 # fpath = 'filtered_data'
-fpath = 'filtered_data_ica_all'
-# fpath = 'filtered_data_asr'
+# fpath = 'filtered_data_ica_all'
+fpath = 'filtered_data_asr'
 
 filtered_data = [os.path.join(fpath,i) for i in os.listdir(fpath)]
 
@@ -203,7 +203,7 @@ import seaborn as sns
 
 # ############################## DATA VISUALIZATION ##############################
 
-# %matplotlib inline
+%matplotlib inline
 
 sns.set(style='white', context='notebook', rc={'figure.figsize':(14,10)})
 # sns.set(style='white', context='notebook', rc={'figure.figsize':(54,50)})
