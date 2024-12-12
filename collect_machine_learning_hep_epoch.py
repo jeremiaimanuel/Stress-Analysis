@@ -71,6 +71,7 @@ svm_roc=[]
 # dataset_used2 = []
 
 for fnum in range(len(rest1_data)):
+# for fnum in range(10,14):
         
     epoch_rest = load_epoch_rest1(fnum)
     epoch_stress = load_epoch_stress(fnum)
@@ -193,52 +194,52 @@ for fnum in range(len(rest1_data)):
     
     ################################ CLASSIFICATION 1 ################################
     
-    clf = LinearDiscriminantAnalysis()
-    scl = StandardScaler()
-    n_splits = 5
-    # gkf = KFold(n_splits = n_splits)
-    skf = StratifiedKFold(n_splits = n_splits)
-    # umap = mp.UMAP(random_state=99)
-    # pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
-    # tscv = TimeSeriesSplit(n_splits = n_splits)
-    pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
-    pipe.fit_transform(X,y)
+    # clf = LinearDiscriminantAnalysis()
+    # scl = StandardScaler()
+    # n_splits = 5
+    # # gkf = KFold(n_splits = n_splits)
+    # skf = StratifiedKFold(n_splits = n_splits)
+    # # umap = mp.UMAP(random_state=99)
+    # # pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
+    # # tscv = TimeSeriesSplit(n_splits = n_splits)
+    # pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
+    # pipe.fit_transform(X,y)
     
-    acc_scores_lda = cross_val_score(pipe, X, y, cv=skf, scoring='accuracy')
-    # print(acc_scores_lda)
-    lda_accuracy.append(acc_scores_lda.mean())
-    # print("%0.2f LDA accuracy with a standard deviation of %0.2f from dataset %d" % (acc_scores_lda.mean(), acc_scores_lda.std(),fnum))
+    # acc_scores_lda = cross_val_score(pipe, X, y, cv=skf, scoring='accuracy')
+    # # print(acc_scores_lda)
+    # lda_accuracy.append(acc_scores_lda.mean())
+    # # print("%0.2f LDA accuracy with a standard deviation of %0.2f from dataset %d" % (acc_scores_lda.mean(), acc_scores_lda.std(),fnum))
     
-    roc_scores_lda = cross_val_score(pipe, X, y, cv=skf, scoring='roc_auc')
-    # print(roc_scores_lda)
-    lda_roc.append(roc_scores_lda.mean())
-    # print("LDA ROC AUC Score:%0.2f from dataset %d" % (roc_scores_lda.mean(),fnum))
+    # roc_scores_lda = cross_val_score(pipe, X, y, cv=skf, scoring='roc_auc')
+    # # print(roc_scores_lda)
+    # lda_roc.append(roc_scores_lda.mean())
+    # # print("LDA ROC AUC Score:%0.2f from dataset %d" % (roc_scores_lda.mean(),fnum))
     
     ################################ CLASSIFICATION 1 ################################
     
     # ################################ CLASSIFICATION 2 ################################
+
+    clf = SVC(kernel='linear')
+    n_splits = 5
+    scl = StandardScaler()
+    skf = StratifiedKFold(n_splits = n_splits)
+    umap = mp.UMAP(random_state=99)
+    pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
+    # pipe = Pipeline([('scl',StandardScaler()),('clf',clf)])
+    # param_grid={'clf__C':[0.25,0.5,0.75, 1]}
+    # gscv = GridSearchCV(pipe, param_grid)
+    # gscv.fit(X, y)
+    pipe.fit(X, y)
     
-    # clf = SVC(kernel='linear')
-    # n_splits = 5
-    # scl = StandardScaler()
-    # skf = StratifiedKFold(n_splits = n_splits)
-    # umap = mp.UMAP(random_state=99)
-    # pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
-    # # pipe = Pipeline([('scl',StandardScaler()),('clf',clf)])
-    # # param_grid={'clf__C':[0.25,0.5,0.75, 1]}
-    # # gscv = GridSearchCV(pipe, param_grid)
-    # # gscv.fit(X, y)
-    # pipe.fit(X, y)
+    acc_scores_svm = cross_val_score(pipe, X, y, cv=skf, scoring='accuracy')
+    # print(acc_scores_svm)
+    svm_accuracy.append(acc_scores_svm.mean())
+    # print("%0.2f SVM accuracy with a standard deviation of %0.2f from dataset %d" % (acc_scores_svm.mean(), acc_scores_svm.std(),fnum))
     
-    # acc_scores_svm = cross_val_score(pipe, X, y, cv=skf, scoring='accuracy')
-    # # print(acc_scores_svm)
-    # svm_accuracy.append(acc_scores_svm.mean())
-    # # print("%0.2f SVM accuracy with a standard deviation of %0.2f from dataset %d" % (acc_scores_svm.mean(), acc_scores_svm.std(),fnum))
-    
-    # roc_scores_svm = cross_val_score(pipe, X, y, cv=skf, scoring='roc_auc')
-    # # print(roc_scores_svm)
-    # svm_roc.append(roc_scores_svm.mean())
-    # # print("SVM ROC AUC Score:%0.2f from dataset %d" % (roc_scores_svm.mean(),fnum))
+    roc_scores_svm = cross_val_score(pipe, X, y, cv=skf, scoring='roc_auc')
+    # print(roc_scores_svm)
+    svm_roc.append(roc_scores_svm.mean())
+    # print("SVM ROC AUC Score:%0.2f from dataset %d" % (roc_scores_svm.mean(),fnum))
         
     # ################################ CLASSIFICATION 2 ################################
     

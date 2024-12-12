@@ -23,7 +23,7 @@ os.chdir(directory_path)
 include_second_rest = False
 segmented = True #option is stats, stats_segmented
 
-metrics = ['std'] #write in list. Option: avg, std, med
+metrics = ['avg','std'] #write in list. Option: avg, std, med
 
 only_twave = True #IF True, better make n_segment = 2, if False, n_segment = 8
 filt_30 = False
@@ -38,8 +38,8 @@ else:
 ##################### Define What I need in here #####################
 
 # fpath = 'epoch_data'
-fpath = 'hep_asr'
-# fpath = 'hep_ica_all'
+# fpath = 'hep_asr'
+fpath = 'hep_ica_all'
 
 rest1_data = [os.path.join(fpath,i) for i in os.listdir(fpath) if i.endswith('first-epo.fif')]
 stress_data = [os.path.join(fpath,i) for i in os.listdir(fpath) if i.endswith('stress-epo.fif')]

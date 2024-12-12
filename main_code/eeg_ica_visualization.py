@@ -13,8 +13,8 @@ from mne.preprocessing import ICA, create_ecg_epochs, create_eog_epochs
 
 from mne_icalabel import label_components
 
-from pan_tompkins import pan_tompkins_qrs
-from pan_tompkins import heart_rate
+# from pan_tompkins import pan_tompkins_qrs
+# from pan_tompkins import heart_rate
 
 directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
@@ -29,7 +29,11 @@ path = ['20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001.vhdr',
         '20240725_X00_mat2mins/20240725_X00_jikken_0004.vhdr',
         '20240725_X00_mat5mins/20240725_X00_jikken_0003.vhdr',
         '20240725_X00_stroop2mins/20240725_X00_jikken_0002.vhdr',
-        '20240725_X00_stroop5mins/20240725_X00_jikken_0001.vhdr']
+        '20240725_X00_stroop5mins/20240725_X00_jikken_0001.vhdr',
+        '20241211_B83_mat2mins/20241211_B83_jikken_0004.vhdr',
+        '20241211_B83_mat5mins/20241211_B83_jikken_0003.vhdr',
+        '20241211_B83_stroop2mins/20241211_B83_jikken_0002.vhdr',
+        '20241211_B83_stroop5mins/20241211_B83_jikken_0001.vhdr',]
 ####### List of Path ######
 
 ######################################### Save ICA Function #########################################

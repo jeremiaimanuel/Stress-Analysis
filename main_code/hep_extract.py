@@ -37,7 +37,7 @@ folder_epoch_ecg = "ecg_epoch"
 
 #####################################################
 
-counter = 1
+counter = 11
 
 raw = mne.io.read_raw_brainvision(os.path.join(folder_raw, fpath_raw[counter]))
 
@@ -49,7 +49,7 @@ raw.set_channel_types({'hEOG':'eog'})
 
 fs = 1000
 tmin = events[3,0]/fs #Experiment Begin 
-tmax = events[-1,0]/fs #Task Begin
+tmax = events[-1,0]/fs #Task End
 
 if fpath_raw[counter] == '20231019_B68_stroop5mins_0001.vhdr':
     tmin = events[9,0]/fs
@@ -105,6 +105,9 @@ def save_hep(folder_dir,file_dir,folder_save,epoch_events=r_peak_events):
     if file_dir.find('B98_jikken_0001')>=1:
         trg2 = events[-1,0]
         trg3 = trg0 + 900000
+    elif file_dir.find('B83')>=1:
+        trg2 = events[-3,0] #Task End
+        trg3 = events[-1,0] #Experiment End
     else:
         trg2 = events[-2,0] #Task End
         trg3 = events[-1,0] #Experiment End
@@ -171,12 +174,14 @@ def save_hep(folder_dir,file_dir,folder_save,epoch_events=r_peak_events):
 #####################################################
 
 # save_hep(folder_asr,fpath_asr[counter],folder_epoch_asr,r_peak_events)
-# save_hep(folder_ica,fpath_ica[counter],folder_epoch_ica,r_peak_events)
-save_hep(folder_ica_eog,fpath_ica_eog[counter],folder_epoch_ica_eog,r_peak_events)
+save_hep(folder_ica,fpath_ica[counter],folder_epoch_ica,r_peak_events)
+# save_hep(folder_ica_eog,fpath_ica_eog[counter],folder_epoch_ica_eog,r_peak_events)
 
 
 #####################################################
-for i in range(len(fpath_raw)):
+# for i in range(len(fpath_raw)):
+# data = [fpath_raw[10],fpath_raw[11],fpath_raw[12],fpath_raw[13]]
+for i in range(10,13):
     counter = i
 
     raw = mne.io.read_raw_brainvision(os.path.join(folder_raw, fpath_raw[counter]))
@@ -245,6 +250,9 @@ for i in range(len(fpath_raw)):
         if file_dir.find('B98_jikken_0001')>=1:
             trg2 = events[-1,0]
             trg3 = trg0 + 900000
+        elif file_dir.find('B83')>=1:
+            trg2 = events[-3,0] #Task End
+            trg3 = events[-1,0] #Experiment End
         else:
             trg2 = events[-2,0] #Task End
             trg3 = events[-1,0] #Experiment End
@@ -279,7 +287,7 @@ for i in range(len(fpath_raw)):
                                 tmax=epoch_tmax, 
                                 baseline=baseline
                                 )
-        # drop = dict(eeg = 100e-6)
+        drop = dict(eeg = 100e-6)
         
         firstrest_epoch = mne.Epochs(firstrest,
                                      events=firstrest_events, 
@@ -312,8 +320,8 @@ for i in range(len(fpath_raw)):
     #####################################################
 
     # save_hep(folder_asr,fpath_asr[counter],folder_epoch_asr,r_peak_events)
-    # save_hep(folder_ica,fpath_ica[counter],folder_epoch_ica,r_peak_events)
+    save_hep(folder_ica,fpath_ica[counter],folder_epoch_ica,r_peak_events)
     # save_hep(folder_ica_eog,fpath_ica_eog[counter],folder_epoch_ica_eog,r_peak_events)
-    save_hep(folder_ecg,fpath_ecg[counter],folder_epoch_ecg,r_peak_events)
+    # save_hep(folder_ecg,fpath_ecg[counter],folder_epoch_ecg,r_peak_events)
     
     

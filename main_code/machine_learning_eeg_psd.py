@@ -24,8 +24,8 @@ directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
 
 # fpath = 'filtered_data'
-# fpath = 'filtered_data_ica_all'
-fpath = 'filtered_data_asr'
+fpath = 'filtered_data_ica_all'
+# fpath = 'filtered_data_asr'
 
 filtered_data = [os.path.join(fpath,i) for i in os.listdir(fpath)]
 
@@ -49,6 +49,9 @@ trg1 = events[1,0] #Task Begin
 if files[file_number].find('B98_jikken_0001')>=1:
     trg2 = events[-1,0]
     trg3 = trg0 + 900000
+elif files[file_number].find('B83')>=1:
+    trg2 = events[-3,0] #Task End
+    trg3 = events[-1,0] #Experiment End
 else:
     trg2 = events[-2,0] #Task End
     trg3 = events[-1,0] #Experiment End

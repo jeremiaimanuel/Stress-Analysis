@@ -1,9 +1,9 @@
 import mne
 import os
 import asrpy
-# from mne.preprocessing import read_ica
-# from mne_icalabel import label_components
-
+from mne.preprocessing import read_ica
+from mne_icalabel import label_components
+# 
 
 fpath = ['20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001.vhdr',
         '20240129_B71_mat5mins/20240129_B71_mat5mins_0001.vhdr',
@@ -14,7 +14,11 @@ fpath = ['20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001.vhdr',
         '20240725_X00_mat2mins/20240725_X00_jikken_0004.vhdr',
         '20240725_X00_mat5mins/20240725_X00_jikken_0003.vhdr',
         '20240725_X00_stroop2mins/20240725_X00_jikken_0002.vhdr',
-        '20240725_X00_stroop5mins/20240725_X00_jikken_0001.vhdr']
+        '20240725_X00_stroop5mins/20240725_X00_jikken_0001.vhdr',
+        '20241211_B83_mat2mins/20241211_B83_jikken_0004.vhdr',
+        '20241211_B83_mat5mins/20241211_B83_jikken_0003.vhdr',
+        '20241211_B83_stroop2mins/20241211_B83_jikken_0002.vhdr',
+        '20241211_B83_stroop5mins/20241211_B83_jikken_0001.vhdr',]
 
 
 folder_filtered_asr = "filtered_data_asr"
@@ -72,8 +76,8 @@ def save_eeg_asr(directory, cutoff= 5, mem_split = 50):
 
 # save_eeg_asr(fpath[0], 20, 50)
 
-for i in fpath:
-    save_eeg_asr(i,20,50)
+for i in fpath[10:]:
+    save_eeg_asr(i,5,45)
 
 def save_eeg_ica(directory, eog_only = False):
     raw = mne.io.read_raw_brainvision(directory, preload = True)
@@ -138,7 +142,7 @@ def save_eeg_ica(directory, eog_only = False):
     del(raw,events,event_ids,montage,fs,tmin,tmax,filt_raw,ica,ic_labels,labels,
         exclude_idx,reconst_raw,file_name)
     
-for i in fpath:
+for i in fpath[10:]:
     save_eeg_ica(i) #Save data which reject all Noises
 
 for i in fpath:
