@@ -23,7 +23,7 @@ os.chdir(directory_path)
 include_second_rest = False
 segmented = True #option is stats, stats_segmented
 
-metrics = ['avg'] #write in list. Option: avg, std, med
+metrics = ['std'] #write in list. Option: avg, std, med
 
 only_twave = True #IF True, better make n_segment = 2, if False, n_segment = 8
 filt_30 = False
@@ -214,6 +214,20 @@ data_rest = np.concatenate((feature_rest))
 data_stress = np.concatenate((feature_stress))
 
 data = [data_rest, data_stress]
+
+fig, ax = plt.subplots(figsize=(10, 7))
+# bp = ax.boxplot(data, patch_artist=True, showmeans=True)
+bp = ax.boxplot(data)
+
+# Adding titles and labels
+ax.set_title(f'Dataset {fnum}: Rest vs Stress (All Channels {metrics[0]})', fontsize=14)
+ax.set_xticklabels(['Rest', 'Stress'], fontsize=12)
+ax.set_ylabel('Value ', fontsize=12)
+# ax.set_ylim(-7e-5,7e-5)
+
+# Show the plot
+plt.show()
+
 for i in range(len(ch_names)):
 # for i in range(0,1):
     data_rest_ch = feature_rest.T[i]
