@@ -102,15 +102,16 @@ def save_hep(folder_dir,file_dir,folder_save,epoch_events=r_peak_events):
 
     trg0 = events[0,0] #Experiment Begin 
     trg1 = events[1,0] #Task Begin
-    if file_dir.find('B98_jikken_0001')>=1:
-        trg2 = events[-1,0]
+    trg3 = events[-1,0] #Experiment End
+    
+    if 'B98_jikken_0001' in file_dir:
+        trg2 = events[-1, 0]
         trg3 = trg0 + 900000
-    elif file_dir.find('B83')>=1:
-        trg2 = events[-3,0] #Task End
-        trg3 = events[-1,0] #Experiment End
+    elif any(keyword in file_dir for keyword in ['B83', 'B74', 'B94']):
+        trg2 = events[-3, 0]  # Task End
     else:
-        trg2 = events[-2,0] #Task End
-        trg3 = events[-1,0] #Experiment End
+        trg2 = events[-2, 0]  # Task End
+        
     
     #Segment in Samples
     eeg_seg1 = trg1-trg0
@@ -179,9 +180,9 @@ save_hep(folder_ica,fpath_ica[counter],folder_epoch_ica,r_peak_events)
 
 
 #####################################################
-for i in range(len(fpath_raw)):
+# for i in range(len(fpath_raw)):
 # data = [fpath_raw[10],fpath_raw[11],fpath_raw[12],fpath_raw[13]]
-# for i in range(10,13):
+for i in range(14,22):
     counter = i
 
     raw = mne.io.read_raw_brainvision(os.path.join(folder_raw, fpath_raw[counter]))
@@ -244,18 +245,18 @@ for i in range(len(fpath_raw)):
         fs = 1000
         
         events, event_ids = mne.events_from_annotations(raw)
-
+    
         trg0 = events[0,0] #Experiment Begin 
         trg1 = events[1,0] #Task Begin
-        if file_dir.find('B98_jikken_0001')>=1:
-            trg2 = events[-1,0]
+        trg3 = events[-1,0] #Experiment End
+        
+        if 'B98_jikken_0001' in file_dir:
+            trg2 = events[-1, 0]
             trg3 = trg0 + 900000
-        elif file_dir.find('B83')>=1:
-            trg2 = events[-3,0] #Task End
-            trg3 = events[-1,0] #Experiment End
+        elif any(keyword in file_dir for keyword in ['B83', 'B74', 'B94']):
+            trg2 = events[-3, 0]  # Task End
         else:
-            trg2 = events[-2,0] #Task End
-            trg3 = events[-1,0] #Experiment End
+            trg2 = events[-2, 0]  # Task End
         
         #Segment in Samples
         eeg_seg1 = trg1-trg0
@@ -319,8 +320,8 @@ for i in range(len(fpath_raw)):
     #####################################################
     #####################################################
 
-    # save_hep(folder_asr,fpath_asr[counter],folder_epoch_asr,r_peak_events)
-    save_hep(folder_ica,fpath_ica[counter],folder_epoch_ica,r_peak_events)
+    save_hep(folder_asr,fpath_asr[counter],folder_epoch_asr,r_peak_events)
+    # save_hep(folder_ica,fpath_ica[counter],folder_epoch_ica,r_peak_events)
     # save_hep(folder_ica_eog,fpath_ica_eog[counter],folder_epoch_ica_eog,r_peak_events)
     # save_hep(folder_ecg,fpath_ecg[counter],folder_epoch_ecg,r_peak_events)
     

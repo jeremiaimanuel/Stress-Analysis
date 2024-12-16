@@ -71,7 +71,8 @@ svm_roc=[]
 # dataset_used2 = []
 
 # for fnum in range(len(rest1_data)):
-for fnum in range(9,14):
+for fnum in range(14,22):
+    
         
     epoch_rest = load_epoch_rest1(fnum)
     epoch_stress = load_epoch_stress(fnum)

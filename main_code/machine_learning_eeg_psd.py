@@ -46,15 +46,15 @@ fs = 1000
 
 trg0 = events[0,0] #Experiment Begin 
 trg1 = events[1,0] #Task Begin
-if files[file_number].find('B98_jikken_0001')>=1:
-    trg2 = events[-1,0]
+trg3 = events[-1,0] #Experiment End
+
+if 'B98_jikken_0001' in files[file_number]:
+    trg2 = events[-1, 0]
     trg3 = trg0 + 900000
-elif files[file_number].find('B83')>=1:
-    trg2 = events[-3,0] #Task End
-    trg3 = events[-1,0] #Experiment End
+elif any(keyword in files[file_number] for keyword in ['B83', 'B74', 'B94']):
+    trg2 = events[-3, 0]  # Task End
 else:
-    trg2 = events[-2,0] #Task End
-    trg3 = events[-1,0] #Experiment End
+    trg2 = events[-2, 0]  # Task End
 
 tmin = trg0/fs
 tmax = trg3/fs
