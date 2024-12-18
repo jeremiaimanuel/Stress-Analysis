@@ -37,7 +37,7 @@ folder_epoch_ecg = "ecg_epoch"
 
 #####################################################
 
-counter = 11
+counter = 8
 
 raw = mne.io.read_raw_brainvision(os.path.join(folder_raw, fpath_raw[counter]))
 
@@ -54,7 +54,7 @@ tmax = events[-1,0]/fs #Task End
 if fpath_raw[counter] == '20231019_B68_stroop5mins_0001.vhdr':
     tmin = events[9,0]/fs
 if fpath_raw[counter] == '20240725_X00_jikken_0003.vhdr':
-    tmax = events[-2,0]/fs
+    tmax = events[-3,0]/fs
 if fpath_raw[counter] == '20240725_X00_jikken_0001.vhdr':
     tmax = events[-2,0]/fs
 if fpath_raw[counter] == '20240418_B98_jikken_0001.vhdr':
@@ -102,15 +102,17 @@ def save_hep(folder_dir,file_dir,folder_save,epoch_events=r_peak_events):
 
     trg0 = events[0,0] #Experiment Begin 
     trg1 = events[1,0] #Task Begin
+    trg2 = events[-2,0] #Task End
     trg3 = events[-1,0] #Experiment End
-    
-    if 'B98_jikken_0001' in file_dir:
+
+    if 'B98_jikken_0001' in files[file_number]:
         trg2 = events[-1, 0]
         trg3 = trg0 + 900000
-    elif any(keyword in file_dir for keyword in ['B83', 'B74', 'B94']):
+    elif 'X00_jikken_0003' in files[file_number]:
+        trg2 = events[-3,0]
+        trg3 = events[-2,0]
+    elif any(keyword in files[file_number] for keyword in ['B83', 'B74', 'B94']):
         trg2 = events[-3, 0]  # Task End
-    else:
-        trg2 = events[-2, 0]  # Task End
         
     
     #Segment in Samples

@@ -26,16 +26,15 @@ import umap.umap_ as mp
 import seaborn as sns
 ############################## IMPORT ML LIBRARY ##############################
 #################################### DEFINE ###################################
-second_rest = False
+# second_rest = False
 #################################### DEFINE ###################################
 ########
-def abs_power_extraction(signal, fs, l_freq, h_freq, tmin, tmax, t_seg = 10, noverlap = 0.9):
+def welch_extraction_mne(raw, l_freq, h_freq, tmin, tmax, t_seg=10, t_overlap=9):
     """
     Extract Absolute PSD from Data
 
     Parameters:
     :param signal: Signal that want to be extracted from
-    :param fs: frequency sampling
     :param l_freq: Minimum range of EEG bands frequency (Theta = 4, Alpha = 8, Beta = 12, Gamma = 30)
     :param h_freq: Maxmimum range of EEG bands frequency (Theta = 8, Alpha = 12, Beta = 30, Gamma = 45)
     :param tmin: Start time where the frequency of the signal want to be extracted 
@@ -46,36 +45,21 @@ def abs_power_extraction(signal, fs, l_freq, h_freq, tmin, tmax, t_seg = 10, nov
     Returns:
     :return: Extracted absolute Power
     """
-
-    freq_data = []
-
-    segment_length = t_seg*fs  # seconds
-    overlap = int(segment_length*noverlap)  # usually t_overlap = 9 seconds, so overlap about 90% of segment
-
-    for i in range(len(signal)):
-        data_channel = signal[i]
-        freq_over_time = []
-        for j in range(0, len(data_channel), segment_length - overlap):
-            segment = data_channel[j:j + segment_length]
-
-            if len(segment) < segment_length:
-                nperseg = len(segment)
-            else:
-                nperseg = segment_length
-
-            #Compute PSD
-            f_eeg, Pxx_eeg = sg.welch(segment, fs, nperseg = nperseg)
-
-            idx_freq = np.where((l_freq<= f_eeg) & (f_eeg<= h_freq))
-
-            abs_power_freq = np.sum(np.abs(Pxx_eeg[idx_freq]))
-
-            #Append
-            if math.isnan(abs_power_freq) == False:
-                freq_over_time.append(abs_power_freq)
-        freq_data.append(freq_over_time[tmin:tmax])
     
-    return np.array(freq_data)
+    signal = raw.copy().crop(tmin=tmin, tmax=tmax)
+    
+    psd_epochs = mne.make_fixed_length_epochs(signal, duration = t_seg, overlap = t_overlap)
+    
+    psd_results = psd_epochs.compute_psd(
+        method='welch', 
+        fmin=l_freq, 
+        fmax=h_freq,
+        window='hann',
+        n_fft=int(len(psd_epochs.times)))
+    
+    abs_arr_psd = np.sum(np.abs(psd_results.get_data()), axis = 2) #Absolute PSD Calculated here
+    
+    return abs_arr_psd.T
 ########
 ########
 def load_fif_file(fdata):
@@ -99,7 +83,8 @@ lda_roc=[]
 svm_accuracy=[]
 svm_roc=[]
 
-for file_number in range(14,22):
+# for file_number in range(17,22):
+for file_number in range(len(files)):
     
     raw = load_fif_file(file_number)
     raw.load_data()
@@ -110,15 +95,17 @@ for file_number in range(14,22):
     
     trg0 = events[0,0] #Experiment Begin 
     trg1 = events[1,0] #Task Begin
+    trg2 = events[-2,0] #Task End
     trg3 = events[-1,0] #Experiment End
 
     if 'B98_jikken_0001' in files[file_number]:
         trg2 = events[-1, 0]
         trg3 = trg0 + 900000
+    elif 'X00_jikken_0003' in files[file_number]:
+        trg2 = events[-3,0]
+        trg3 = events[-2,0]
     elif any(keyword in files[file_number] for keyword in ['B83', 'B74', 'B94']):
         trg2 = events[-3, 0]  # Task End
-    else:
-        trg2 = events[-2, 0]  # Task End
     
     tmin = trg0/fs
     tmax = trg3/fs
@@ -148,45 +135,51 @@ for file_number in range(14,22):
             name = i+j
             new_eeg_ch_names.append(name)
             
-    theta_data_rest = abs_power_extraction(eeg_data, fs, 4, 8, 0, eeg_newseg1)
-    theta_data_stress = abs_power_extraction(eeg_data, fs, 4, 8, eeg_newseg1, eeg_newseg2)
-    theta_data_rest2 = abs_power_extraction(eeg_data, fs, 4, 8, eeg_newseg2, eeg_newseg3)
-    
-    alpha_data_rest = abs_power_extraction(eeg_data, fs, 8, 12, 0, eeg_newseg1)
-    alpha_data_stress = abs_power_extraction(eeg_data, fs, 8, 12, eeg_newseg1, eeg_newseg2)
-    alpha_data_rest2 = abs_power_extraction(eeg_data, fs, 8, 12, eeg_newseg2, eeg_newseg3)
-    
-    beta_data_rest = abs_power_extraction(eeg_data, fs, 12, 30, 0, eeg_newseg1)
-    beta_data_stress = abs_power_extraction(eeg_data, fs, 12, 30, eeg_newseg1, eeg_newseg2)
-    beta_data_rest2 = abs_power_extraction(eeg_data, fs, 12, 30, eeg_newseg2, eeg_newseg3)
-    
-    gamma_data_rest = abs_power_extraction(eeg_data, fs, 30, 45, 0, eeg_newseg1)
-    gamma_data_stress = abs_power_extraction(eeg_data, fs, 30, 45, eeg_newseg1, eeg_newseg2)
-    gamma_data_rest2 = abs_power_extraction(eeg_data, fs, 30, 45, eeg_newseg2, eeg_newseg3)
+    theta_data_rest = welch_extraction_mne(raw, 4, 8, 0, eeg_newseg1)
+    theta_data_stress = welch_extraction_mne(raw, 4, 8, eeg_newseg1, eeg_newseg2)
+    # theta_data_rest2 = welch_extraction_mne(raw, 4, 8, eeg_newseg2, eeg_newseg3)
+
+    alpha_data_rest = welch_extraction_mne(raw, 8, 12, 0, eeg_newseg1)
+    alpha_data_stress = welch_extraction_mne(raw, 8, 12, eeg_newseg1, eeg_newseg2)
+    # alpha_data_rest2 = welch_extraction_mne(raw, 8, 12, eeg_newseg2, eeg_newseg3)
+
+    beta_data_rest = welch_extraction_mne(raw, 12, 30, 0, eeg_newseg1)
+    beta_data_stress = welch_extraction_mne(raw, 12, 30, eeg_newseg1, eeg_newseg2)
+    # beta_data_rest2 = welch_extraction_mne(raw, 12, 30, eeg_newseg2, eeg_newseg3)
+
+    gamma_data_rest = welch_extraction_mne(raw, 30, 40, 0, eeg_newseg1)
+    gamma_data_stress = welch_extraction_mne(raw, 30, 40, eeg_newseg1, eeg_newseg2)
+    # gamma_data_rest2 = welch_extraction_mne(raw, 30, 40, eeg_newseg2, eeg_newseg3)
     
     data_list_rest = np.concatenate((theta_data_rest,alpha_data_rest,beta_data_rest,gamma_data_rest))
     data_list_stress = np.concatenate((theta_data_stress,alpha_data_stress,beta_data_stress,gamma_data_stress))
-    data_list_rest2 = np.concatenate((theta_data_rest2,alpha_data_rest2,beta_data_rest2,gamma_data_rest2))
+    # data_list_rest2 = np.concatenate((theta_data_rest2,alpha_data_rest2,beta_data_rest2,gamma_data_rest2))
     
     label_rest = len(data_list_rest[0]) * [0]
     label_stress = len(data_list_stress[0]) * [1]
-    label_rest2 = len(data_list_rest2[0]) * [2]
+    # label_rest2 = len(data_list_rest2[0]) * [2]
     
     label_str_rest = len(data_list_rest[0]) * ['Rest 1']
     label_str_stress = len(data_list_stress[0]) * ['Stress']
-    label_str_rest2 = len(data_list_rest2[0]) * ['Rest 2']
+    # label_str_rest2 = len(data_list_rest2[0]) * ['Rest 2']
     
-    if second_rest:
-        feature = np.concatenate((data_list_rest,data_list_stress, data_list_rest2), axis = 1)
-        label = np.concatenate((label_rest, label_stress, label_rest2))
-        label_str = np.concatenate((label_str_rest, label_str_stress, label_str_rest2))
-        feature = feature.T
-    else:
-        feature = np.concatenate((data_list_rest,data_list_stress), axis = 1)
-        label = np.concatenate((label_rest, label_stress))
-        label_str = np.concatenate((label_str_rest, label_str_stress))    
+    # if second_rest:
+    #     feature = np.concatenate((data_list_rest,data_list_stress, data_list_rest2), axis = 1)
+    #     label = np.concatenate((label_rest, label_stress, label_rest2))
+    #     label_str = np.concatenate((label_str_rest, label_str_stress, label_str_rest2))
+    #     feature = feature.T
+    # else:
+    #     feature = np.concatenate((data_list_rest,data_list_stress), axis = 1)
+    #     label = np.concatenate((label_rest, label_stress))
+    #     label_str = np.concatenate((label_str_rest, label_str_stress))    
     
-        feature = feature.T
+    #     feature = feature.T
+    
+    feature = np.concatenate((data_list_rest,data_list_stress), axis = 1)
+    label = np.concatenate((label_rest, label_stress))
+    label_str = np.concatenate((label_str_rest, label_str_stress))    
+
+    feature = feature.T
     
     ############################# DATA FRAME FEATURE #############################
     features = pd.DataFrame(feature, columns = new_eeg_ch_names)
@@ -234,8 +227,8 @@ for file_number in range(14,22):
     gkf = KFold(n_splits = n_splits)
     skf = StratifiedKFold(n_splits = n_splits)
     umap = mp.UMAP(random_state=99)
-    pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
-    # pipe = Pipeline([('scl',StandardScaler()),('clf',clf)])
+    # pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
+    pipe = Pipeline([('scl',scl),('clf',clf)])
     # param_grid={'clf__C':[0.25,0.5,0.75, 1]}
     # gscv = GridSearchCV(pipe, param_grid)
     # gscv.fit(X, y)

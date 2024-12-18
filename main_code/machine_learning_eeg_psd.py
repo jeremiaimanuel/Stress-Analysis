@@ -46,15 +46,17 @@ fs = 1000
 
 trg0 = events[0,0] #Experiment Begin 
 trg1 = events[1,0] #Task Begin
+trg2 = events[-2,0] #Task End
 trg3 = events[-1,0] #Experiment End
 
 if 'B98_jikken_0001' in files[file_number]:
     trg2 = events[-1, 0]
     trg3 = trg0 + 900000
+elif 'X00_jikken_0003' in files[file_number]:
+    trg2 = events[-3,0]
+    trg3 = events[-2,0]
 elif any(keyword in files[file_number] for keyword in ['B83', 'B74', 'B94']):
     trg2 = events[-3, 0]  # Task End
-else:
-    trg2 = events[-2, 0]  # Task End
 
 tmin = trg0/fs
 tmax = trg3/fs
@@ -120,9 +122,9 @@ beta_data_rest = welch_extraction_mne(raw, 12, 30, 0, eeg_newseg1)
 beta_data_stress = welch_extraction_mne(raw, 12, 30, eeg_newseg1, eeg_newseg2)
 beta_data_rest2 = welch_extraction_mne(raw, 12, 30, eeg_newseg2, eeg_newseg3)
 
-gamma_data_rest = welch_extraction_mne(raw, 30, 45, 0, eeg_newseg1)
-gamma_data_stress = welch_extraction_mne(raw, 30, 45, eeg_newseg1, eeg_newseg2)
-gamma_data_rest2 = welch_extraction_mne(raw, 30, 45, eeg_newseg2, eeg_newseg3)
+gamma_data_rest = welch_extraction_mne(raw, 30, 40, 0, eeg_newseg1)
+gamma_data_stress = welch_extraction_mne(raw, 30, 40, eeg_newseg1, eeg_newseg2)
+gamma_data_rest2 = welch_extraction_mne(raw, 30, 40, eeg_newseg2, eeg_newseg3)
 
 data_list_rest = np.concatenate((theta_data_rest,alpha_data_rest,beta_data_rest,gamma_data_rest))
 data_list_stress = np.concatenate((theta_data_stress,alpha_data_stress,beta_data_stress,gamma_data_stress))
@@ -316,8 +318,8 @@ scl = StandardScaler()
 gkf = KFold(n_splits = n_splits)
 skf = StratifiedKFold(n_splits = n_splits)
 umap = mp.UMAP(random_state=99)
-pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
-# pipe = Pipeline([('scl',StandardScaler()),('clf',clf)])
+# pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
+pipe = Pipeline([('scl',scl()),('clf',clf)])
 # param_grid={'clf__C':[0.25,0.5,0.75, 1]}
 # gscv = GridSearchCV(pipe, param_grid)
 # gscv.fit(X, y)
