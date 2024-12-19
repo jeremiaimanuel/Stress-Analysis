@@ -33,7 +33,15 @@ path = ['20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001.vhdr',
         '20241211_B83_stroop5mins/20241211_B83_jikken_0001.vhdr',
         '20241211_B83_stroop2mins/20241211_B83_jikken_0002.vhdr',
         '20241211_B83_mat5mins/20241211_B83_jikken_0003.vhdr',
-        '20241211_B83_mat2mins/20241211_B83_jikken_0004.vhdr',]
+        '20241211_B83_mat2mins/20241211_B83_jikken_0004.vhdr',
+        '20241214_B74_stroop5mins/20241214_B74_jikken_0001.vhdr',
+        '20241214_B74_stroop2mins/20241214_B74_jikken_0002.vhdr',
+        '20241214_B74_mat5mins/20241214_B74_jikken_0003.vhdr',
+        '20241214_B74_mat2mins/20241214_B74_jikken_0004.vhdr',
+        '20241214_B94_stroop5mins/20241214_B94_jikken_0001.vhdr',
+        '20241214_B94_stroop2mins/20241214_B94_jikken_0002.vhdr',
+        '20241214_B94_mat5mins/20241214_B94_jikken_0003.vhdr',
+        '20241214_B94_mat2mins/20241214_B94_jikken_0004.vhdr',]
 ####### List of Path ######
 
 ######################################### Save ICA Function #########################################
@@ -61,7 +69,7 @@ def save_ica(directory):
     if directory == "20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001.vhdr":
         tmin = events[9,0]/fs
     if directory == '20240725_X00_mat5mins/20240725_X00_jikken_0003.vhdr':
-        tmax = events[-2,0]/fs
+        tmax = events[-3,0]/fs
     if directory == '20240725_X00_stroop5mins/20240725_X00_jikken_0001.vhdr':
         tmax = events[-2,0]/fs
     if directory == '20240418_B98_stroop5mins/20240418_B98_jikken_0001.vhdr':
@@ -119,7 +127,7 @@ tmax = events[-1,0]/fs #Task Begin
 if path[file_number] == "20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001.vhdr":
     tmin = events[9,0]/fs
 if path[file_number] == '20240725_X00_mat5mins/20240725_X00_jikken_0003.vhdr':
-    tmax = events[-2,0]/fs
+    tmax = events[-3,0]/fs
 if path[file_number] == '20240725_X00_stroop5mins/20240725_X00_jikken_0001.vhdr':
     tmax = events[-2,0]/fs
 if path[file_number] == '20240418_B98_stroop5mins/20240418_B98_jikken_0001.vhdr':

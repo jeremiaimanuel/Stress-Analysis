@@ -47,6 +47,8 @@ raw.set_channel_types({'ECG':'ecg'})
 raw.set_channel_types({'vEOG':'eog'})
 raw.set_channel_types({'hEOG':'eog'})
 
+####EXTRACTING From RAW so Timing Trigger need to be adjusted####
+
 fs = 1000
 tmin = events[3,0]/fs #Experiment Begin 
 tmax = events[-1,0]/fs #Task End
@@ -60,7 +62,9 @@ if fpath_raw[counter] == '20240725_X00_jikken_0001.vhdr':
 if fpath_raw[counter] == '20240418_B98_jikken_0001.vhdr':
     tmax = tmin + 900
 
-#####################################################
+####EXTRACTING From RAW so Timing Trigger need to be adjusted####
+
+##################################################### 
 
 def make_r_peaks_events(raw=raw):
     raw_ecg = raw.copy().pick_types(ecg=True).crop(tmin = tmin, tmax = tmax) #make a copy
@@ -102,23 +106,19 @@ def save_hep(folder_dir,file_dir,folder_save,epoch_events=r_peak_events):
 
     trg0 = events[0,0] #Experiment Begin 
     trg1 = events[1,0] #Task Begin
-    trg2 = events[-2,0] #Task End
+    trg2 = events[-2,0]  # Task End
     trg3 = events[-1,0] #Experiment End
-
-    if 'B98_jikken_0001' in files[file_number]:
+    
+    if 'B98_jikken_0001' in file_dir:
         trg2 = events[-1, 0]
         trg3 = trg0 + 900000
-    elif 'X00_jikken_0003' in files[file_number]:
-        trg2 = events[-3,0]
-        trg3 = events[-2,0]
-    elif any(keyword in files[file_number] for keyword in ['B83', 'B74', 'B94']):
+    elif any(keyword in file_dir for keyword in ['B83', 'B74', 'B94']):
         trg2 = events[-3, 0]  # Task End
-        
     
     #Segment in Samples
     eeg_seg1 = trg1-trg0
     eeg_seg2 = trg2-trg0
-    eeg_seg3 = trg3-trg0
+    # eeg_seg3 = trg3-trg0
 
     #Segment in ms
     eeg_newseg1 = float(eeg_seg1/fs)
@@ -139,12 +139,12 @@ def save_hep(folder_dir,file_dir,folder_save,epoch_events=r_peak_events):
     secondrest_events = epoch_events[(epoch_events[:, 0] >= trg2)]
       
     # Creating epochs
-    # hep_epoch = mne.Epochs(raw,
-    #                        events=epoch_events,
-    #                        tmin=epoch_tmin, 
-    #                        tmax=epoch_tmax, 
-    #                        baseline=baseline
-    #                        )
+    hep_epoch = mne.Epochs(raw,
+                            events=epoch_events,
+                            tmin=epoch_tmin, 
+                            tmax=epoch_tmax, 
+                            baseline=baseline
+                            )
     drop = dict(eeg = 100e-6)
     
     firstrest_epoch = mne.Epochs(firstrest,
@@ -152,23 +152,24 @@ def save_hep(folder_dir,file_dir,folder_save,epoch_events=r_peak_events):
                                  tmin=epoch_tmin, 
                                  tmax=epoch_tmax, 
                                  baseline=baseline,
-                                 reject=drop
+                                 # reject=drop
                                  )
     stress_epoch = mne.Epochs(stress,
                               events=stress_events, 
                               tmin=epoch_tmin, 
                               tmax=epoch_tmax, 
                               baseline=baseline,
-                              reject=drop
+                              # reject=drop
                               )
     secondrest_epoch = mne.Epochs(secondrest,
                                   events=secondrest_events, 
                                   tmin=epoch_tmin, 
                                   tmax=epoch_tmax, 
                                   baseline=baseline,
-                                  reject=drop
+                                  # reject=drop
                                   )
-
+    
+    hep_epoch.save(os.path.join(folder_save,file_dir.replace(".fif", "-all-epo.fif")), overwrite=True)
     firstrest_epoch.save(os.path.join(folder_save,file_dir.replace(".fif", "-first-epo.fif")), overwrite=True)
     stress_epoch.save(os.path.join(folder_save,file_dir.replace(".fif", "-stress-epo.fif")), overwrite=True)
     secondrest_epoch.save(os.path.join(folder_save,file_dir.replace(".fif", "-second-epo.fif")), overwrite=True)
@@ -176,9 +177,10 @@ def save_hep(folder_dir,file_dir,folder_save,epoch_events=r_peak_events):
 #####################################################
 #####################################################
 
-# save_hep(folder_asr,fpath_asr[counter],folder_epoch_asr,r_peak_events)
-save_hep(folder_ica,fpath_ica[counter],folder_epoch_ica,r_peak_events)
+save_hep(folder_asr,fpath_asr[counter],folder_epoch_asr,r_peak_events)
+# save_hep(folder_ica,fpath_ica[counter],folder_epoch_ica,r_peak_events)
 # save_hep(folder_ica_eog,fpath_ica_eog[counter],folder_epoch_ica_eog,r_peak_events)
+# save_hep(folder_ecg,fpath_ecg[counter],folder_epoch_ecg,r_peak_events)
 
 
 #####################################################
@@ -195,18 +197,22 @@ for i in range(14,22):
     raw.set_channel_types({'vEOG':'eog'})
     raw.set_channel_types({'hEOG':'eog'})
 
+    ####EXTRACTING From RAW so Timing Trigger need to be adjusted####
+    
     fs = 1000
     tmin = events[3,0]/fs #Experiment Begin 
-    tmax = events[-1,0]/fs #Task Begin
-
+    tmax = events[-1,0]/fs #Task End
+    
     if fpath_raw[counter] == '20231019_B68_stroop5mins_0001.vhdr':
         tmin = events[9,0]/fs
     if fpath_raw[counter] == '20240725_X00_jikken_0003.vhdr':
-        tmax = events[-2,0]/fs
+        tmax = events[-3,0]/fs
     if fpath_raw[counter] == '20240725_X00_jikken_0001.vhdr':
         tmax = events[-2,0]/fs
     if fpath_raw[counter] == '20240418_B98_jikken_0001.vhdr':
         tmax = tmin + 900
+    
+    ####EXTRACTING From RAW so Timing Trigger need to be adjusted####
 
     #####################################################
 
@@ -250,6 +256,7 @@ for i in range(14,22):
     
         trg0 = events[0,0] #Experiment Begin 
         trg1 = events[1,0] #Task Begin
+        trg2 = events[-2,0]  # Task End
         trg3 = events[-1,0] #Experiment End
         
         if 'B98_jikken_0001' in file_dir:
@@ -257,8 +264,6 @@ for i in range(14,22):
             trg3 = trg0 + 900000
         elif any(keyword in file_dir for keyword in ['B83', 'B74', 'B94']):
             trg2 = events[-3, 0]  # Task End
-        else:
-            trg2 = events[-2, 0]  # Task End
         
         #Segment in Samples
         eeg_seg1 = trg1-trg0

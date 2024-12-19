@@ -7,18 +7,26 @@ from mne_icalabel import label_components
 
 fpath = ['20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001.vhdr',
         '20240129_B71_mat5mins/20240129_B71_mat5mins_0001.vhdr',
-        '20240418_B98_mat2mins/20240418_B98_jikken_0004.vhdr',
-        '20240418_B98_mat5mins/20240418_B98_jikken_0003.vhdr',
-        '20240418_B98_stroop2mins/20240418_B98_jikken_0002.vhdr',
         '20240418_B98_stroop5mins/20240418_B98_jikken_0001.vhdr',
-        '20240725_X00_mat2mins/20240725_X00_jikken_0004.vhdr',
-        '20240725_X00_mat5mins/20240725_X00_jikken_0003.vhdr',
-        '20240725_X00_stroop2mins/20240725_X00_jikken_0002.vhdr',
+        '20240418_B98_stroop2mins/20240418_B98_jikken_0002.vhdr',
+        '20240418_B98_mat5mins/20240418_B98_jikken_0003.vhdr',
+        '20240418_B98_mat2mins/20240418_B98_jikken_0004.vhdr',
         '20240725_X00_stroop5mins/20240725_X00_jikken_0001.vhdr',
-        '20241211_B83_mat2mins/20241211_B83_jikken_0004.vhdr',
-        '20241211_B83_mat5mins/20241211_B83_jikken_0003.vhdr',
+        '20240725_X00_stroop2mins/20240725_X00_jikken_0002.vhdr',
+        '20240725_X00_mat5mins/20240725_X00_jikken_0003.vhdr',
+        '20240725_X00_mat2mins/20240725_X00_jikken_0004.vhdr',
+        '20241211_B83_stroop5mins/20241211_B83_jikken_0001.vhdr',
         '20241211_B83_stroop2mins/20241211_B83_jikken_0002.vhdr',
-        '20241211_B83_stroop5mins/20241211_B83_jikken_0001.vhdr',]
+        '20241211_B83_mat5mins/20241211_B83_jikken_0003.vhdr',
+        '20241211_B83_mat2mins/20241211_B83_jikken_0004.vhdr',
+        '20241214_B74_stroop5mins/20241214_B74_jikken_0001.vhdr',
+        '20241214_B74_stroop2mins/20241214_B74_jikken_0002.vhdr',
+        '20241214_B74_mat5mins/20241214_B74_jikken_0003.vhdr',
+        '20241214_B74_mat2mins/20241214_B74_jikken_0004.vhdr',
+        '20241214_B94_stroop5mins/20241214_B94_jikken_0001.vhdr',
+        '20241214_B94_stroop2mins/20241214_B94_jikken_0002.vhdr',
+        '20241214_B94_mat5mins/20241214_B94_jikken_0003.vhdr',
+        '20241214_B94_mat2mins/20241214_B94_jikken_0004.vhdr',]
 
 
 folder_filtered_asr = "filtered_data_asr"
@@ -52,7 +60,7 @@ def save_eeg_asr(directory, cutoff= 5, mem_split = 50):
     if directory == "20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001.vhdr":
         tmin = events[9,0]/fs
     if directory == '20240725_X00_mat5mins/20240725_X00_jikken_0003.vhdr':
-        tmax = events[-2,0]/fs
+        tmax = events[-3,0]/fs
     if directory == '20240725_X00_stroop5mins/20240725_X00_jikken_0001.vhdr':
         tmax = events[-2,0]/fs
     if directory == '20240418_B98_stroop5mins/20240418_B98_jikken_0001.vhdr':
@@ -101,7 +109,7 @@ def save_eeg_ica(directory, eog_only = False):
     if directory == "20231019_B68_stroop5mins/20231019_B68_stroop5mins_0001.vhdr":
         tmin = events[9,0]/fs
     if directory == '20240725_X00_mat5mins/20240725_X00_jikken_0003.vhdr':
-        tmax = events[-2,0]/fs
+        tmax = events[-3,0]/fs
     if directory == '20240725_X00_stroop5mins/20240725_X00_jikken_0001.vhdr':
         tmax = events[-2,0]/fs
     if directory == '20240418_B98_stroop5mins/20240418_B98_jikken_0001.vhdr':
