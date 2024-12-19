@@ -52,9 +52,6 @@ trg3 = events[-1,0] #Experiment End
 if 'B98_jikken_0001' in files[file_number]:
     trg2 = events[-1, 0]
     trg3 = trg0 + 900000
-elif 'X00_jikken_0003' in files[file_number]:
-    trg2 = events[-3,0]
-    trg3 = events[-2,0]
 elif any(keyword in files[file_number] for keyword in ['B83', 'B74', 'B94']):
     trg2 = events[-3, 0]  # Task End
 
