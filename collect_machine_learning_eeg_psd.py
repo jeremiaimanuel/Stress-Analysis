@@ -26,7 +26,7 @@ import umap.umap_ as mp
 import seaborn as sns
 ############################## IMPORT ML LIBRARY ##############################
 #################################### DEFINE ###################################
-# second_rest = False
+second_rest = False
 #################################### DEFINE ###################################
 ########
 def welch_extraction_mne(raw, l_freq, h_freq, tmin, tmax, t_seg=10, t_overlap=9):
@@ -134,49 +134,43 @@ for file_number in range(len(files)):
             
     theta_data_rest = welch_extraction_mne(raw, 4, 8, 0, eeg_newseg1)
     theta_data_stress = welch_extraction_mne(raw, 4, 8, eeg_newseg1, eeg_newseg2)
-    # theta_data_rest2 = welch_extraction_mne(raw, 4, 8, eeg_newseg2, eeg_newseg3)
+    theta_data_rest2 = welch_extraction_mne(raw, 4, 8, eeg_newseg2, eeg_newseg3)
 
     alpha_data_rest = welch_extraction_mne(raw, 8, 12, 0, eeg_newseg1)
     alpha_data_stress = welch_extraction_mne(raw, 8, 12, eeg_newseg1, eeg_newseg2)
-    # alpha_data_rest2 = welch_extraction_mne(raw, 8, 12, eeg_newseg2, eeg_newseg3)
+    alpha_data_rest2 = welch_extraction_mne(raw, 8, 12, eeg_newseg2, eeg_newseg3)
 
     beta_data_rest = welch_extraction_mne(raw, 12, 30, 0, eeg_newseg1)
     beta_data_stress = welch_extraction_mne(raw, 12, 30, eeg_newseg1, eeg_newseg2)
-    # beta_data_rest2 = welch_extraction_mne(raw, 12, 30, eeg_newseg2, eeg_newseg3)
+    beta_data_rest2 = welch_extraction_mne(raw, 12, 30, eeg_newseg2, eeg_newseg3)
 
     gamma_data_rest = welch_extraction_mne(raw, 30, 40, 0, eeg_newseg1)
     gamma_data_stress = welch_extraction_mne(raw, 30, 40, eeg_newseg1, eeg_newseg2)
-    # gamma_data_rest2 = welch_extraction_mne(raw, 30, 40, eeg_newseg2, eeg_newseg3)
+    gamma_data_rest2 = welch_extraction_mne(raw, 30, 40, eeg_newseg2, eeg_newseg3)
     
     data_list_rest = np.concatenate((theta_data_rest,alpha_data_rest,beta_data_rest,gamma_data_rest))
     data_list_stress = np.concatenate((theta_data_stress,alpha_data_stress,beta_data_stress,gamma_data_stress))
-    # data_list_rest2 = np.concatenate((theta_data_rest2,alpha_data_rest2,beta_data_rest2,gamma_data_rest2))
+    data_list_rest2 = np.concatenate((theta_data_rest2,alpha_data_rest2,beta_data_rest2,gamma_data_rest2))
     
     label_rest = len(data_list_rest[0]) * [0]
     label_stress = len(data_list_stress[0]) * [1]
-    # label_rest2 = len(data_list_rest2[0]) * [2]
+    label_rest2 = len(data_list_rest2[0]) * [2]
     
     label_str_rest = len(data_list_rest[0]) * ['Rest 1']
     label_str_stress = len(data_list_stress[0]) * ['Stress']
-    # label_str_rest2 = len(data_list_rest2[0]) * ['Rest 2']
+    label_str_rest2 = len(data_list_rest2[0]) * ['Rest 2']
     
-    # if second_rest:
-    #     feature = np.concatenate((data_list_rest,data_list_stress, data_list_rest2), axis = 1)
-    #     label = np.concatenate((label_rest, label_stress, label_rest2))
-    #     label_str = np.concatenate((label_str_rest, label_str_stress, label_str_rest2))
-    #     feature = feature.T
-    # else:
-    #     feature = np.concatenate((data_list_rest,data_list_stress), axis = 1)
-    #     label = np.concatenate((label_rest, label_stress))
-    #     label_str = np.concatenate((label_str_rest, label_str_stress))    
+    if second_rest:
+        feature = np.concatenate((data_list_rest,data_list_stress, data_list_rest2), axis = 1)
+        label = np.concatenate((label_rest, label_stress, label_rest2))
+        label_str = np.concatenate((label_str_rest, label_str_stress, label_str_rest2))
+        feature = feature.T
+    else:
+        feature = np.concatenate((data_list_rest,data_list_stress), axis = 1)
+        label = np.concatenate((label_rest, label_stress))
+        label_str = np.concatenate((label_str_rest, label_str_stress))    
     
-    #     feature = feature.T
-    
-    feature = np.concatenate((data_list_rest,data_list_stress), axis = 1)
-    label = np.concatenate((label_rest, label_stress))
-    label_str = np.concatenate((label_str_rest, label_str_stress))    
-
-    feature = feature.T
+        feature = feature.T
     
     ############################# DATA FRAME FEATURE #############################
     features = pd.DataFrame(feature, columns = new_eeg_ch_names)
@@ -185,7 +179,7 @@ for file_number in range(len(files)):
     
     df_labels = labels.join(labels_str)
     df = df_labels.join(features)
-    display(df)
+    # display(df)
     
     X = df.filter(like='ch')
     y = np.ravel(df.filter(like='label'))
