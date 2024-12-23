@@ -183,10 +183,10 @@ save_hep(folder_asr,fpath_asr[counter],folder_epoch_asr,r_peak_events)
 # save_hep(folder_ecg,fpath_ecg[counter],folder_epoch_ecg,r_peak_events)
 
 
-#####################################################
-# for i in range(len(fpath_raw)):
+###################################################
+for i in range(len(fpath_raw)):
 # data = [fpath_raw[10],fpath_raw[11],fpath_raw[12],fpath_raw[13]]
-for i in range(14,22):
+# for i in range(14,22):
     counter = i
 
     raw = mne.io.read_raw_brainvision(os.path.join(folder_raw, fpath_raw[counter]))
@@ -289,34 +289,36 @@ for i in range(14,22):
         secondrest_events = epoch_events[(epoch_events[:, 0] >= trg2)]
           
         # Creating epochs
+        drop = dict(eeg = 100e-6)
         hep_epoch = mne.Epochs(raw,
                                 events=epoch_events,
                                 tmin=epoch_tmin, 
                                 tmax=epoch_tmax, 
-                                baseline=baseline
+                                baseline=baseline,
+                                reject=drop
                                 )
-        drop = dict(eeg = 100e-6)
+
         
         firstrest_epoch = mne.Epochs(firstrest,
                                      events=firstrest_events, 
                                      tmin=epoch_tmin, 
                                      tmax=epoch_tmax, 
                                      baseline=baseline,
-                                     # reject=drop
+                                     reject=drop
                                      )
         stress_epoch = mne.Epochs(stress,
                                   events=stress_events, 
                                   tmin=epoch_tmin, 
                                   tmax=epoch_tmax, 
                                   baseline=baseline,
-                                  # reject=drop
+                                  reject=drop
                                   )
         secondrest_epoch = mne.Epochs(secondrest,
                                       events=secondrest_events, 
                                       tmin=epoch_tmin, 
                                       tmax=epoch_tmax, 
                                       baseline=baseline,
-                                      # reject=drop
+                                      reject=drop
                                       )
         
         hep_epoch.save(os.path.join(folder_save,file_dir.replace(".fif", "-all-epo.fif")), overwrite=True)

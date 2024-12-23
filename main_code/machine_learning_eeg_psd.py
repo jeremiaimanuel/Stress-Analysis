@@ -157,7 +157,7 @@ p_value = t_test_data.pvalue
 p_value_data = np.column_stack((new_eeg_ch_names, p_value))
 
 for i in range(len(p_value)):
-    if p_value[i] >= 0.05:
+    if p_value[i] <= 0.05:
         print(i)
 
 ###############################################################################
@@ -289,11 +289,19 @@ for train_idx, test_idx in skf.split(X, y):
     X_test_lda = pipe.transform(X_test)
     
     # Plot LDA for this fold
-    plt.figure()
+    plt.figure(figsize=(8, 5))
     for i in np.unique(y_train):
-        plt.scatter(X_train_lda[y_train == i], np.zeros_like(X_train_lda[y_train == i]), alpha=.8, label=f'Class {i} (train)')
+        if i == 0:
+            label = 'Rest (Train)'
+        elif i == 1:
+            label = 'Task (Train)'
+        plt.scatter(X_train_lda[y_train == i], np.zeros_like(X_train_lda[y_train == i]), alpha=.8, label=label)
     for i in np.unique(y_test):
-        plt.scatter(X_test_lda[y_test == i], np.zeros_like(X_test_lda[y_test == i])-0.05, alpha=.8, label=f'Class {i} (test)')
+        if i == 0:
+            label = 'Rest (Test)'
+        elif i == 1:
+            label = 'Task (Test)'
+        plt.scatter(X_test_lda[y_test == i], np.zeros_like(X_test_lda[y_test == i])-0.05, alpha=.8, label=label)
     
     plt.legend(loc='best', shadow=False)
     plt.yticks([])  # No need for y-axis ticks in 1D plot
@@ -314,7 +322,7 @@ n_splits = 5
 scl = StandardScaler()
 gkf = KFold(n_splits = n_splits)
 skf = StratifiedKFold(n_splits = n_splits)
-umap = mp.UMAP(random_state=99)
+# umap = mp.UMAP(random_state=99)
 # pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
 pipe = Pipeline([('scl',scl),('clf',clf)])
 # param_grid={'clf__C':[0.25,0.5,0.75, 1]}
@@ -367,24 +375,24 @@ for train_idx, test_idx in skf.split(X, y):
     grid = np.c_[xx.ravel(), yy.ravel()]
     Z = np.reshape(clf.predict(grid), xx.shape)
 
-    plt.figure()
+    plt.figure(figsize=(8, 5))
     plt.contourf(xx, yy, Z, alpha=0.3,cmap = ListedColormap(('green','red')))
     plt.xlim(xx.min(),xx.max())
     plt.ylim(yy.min(),yy.max())
 
     for i,j in enumerate(np.unique(y_train)):
         if j == 0:
-            label = 'Rest_train'
+            label = 'Rest (Train)'
         else:
-            label = 'Stress_train'
+            label = 'Task (Train)'
         plt.scatter(X_train_reduced[y_train ==j,0],X_train_reduced[y_train==j,1],
                     c=ListedColormap(('limegreen','lightcoral'))(i),label=label)
     
     for i,j in enumerate(np.unique(y_test)):
         if j == 0:
-            label = 'Rest'
+            label = 'Rest (Test)'
         else:
-            label = 'Stress'
+            label = 'Task (Test)'
         plt.scatter(X_test_reduced[y_test ==j,0],X_test_reduced[y_test==j,1],
                     c=ListedColormap(('green','red'))(i),label=label)
     

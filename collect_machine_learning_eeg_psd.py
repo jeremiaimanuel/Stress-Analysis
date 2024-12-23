@@ -193,8 +193,7 @@ for file_number in range(len(files)):
     n_splits = 5
     # gkf = KFold(n_splits = n_splits)
     skf = StratifiedKFold(n_splits = n_splits)
-    # tscv = TimeSeriesSplit(n_splits = n_splits)
-    pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
+    pipe = Pipeline([('scaler',scl),('clf',clf)])
     pipe.fit(X,y)
     
     acc_scores = cross_val_score(pipe, X, y, cv=skf, scoring='accuracy')
@@ -217,12 +216,9 @@ for file_number in range(len(files)):
     scl = StandardScaler()
     gkf = KFold(n_splits = n_splits)
     skf = StratifiedKFold(n_splits = n_splits)
-    umap = mp.UMAP(random_state=99)
+    # umap = mp.UMAP(random_state=99)
     # pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
     pipe = Pipeline([('scl',scl),('clf',clf)])
-    # param_grid={'clf__C':[0.25,0.5,0.75, 1]}
-    # gscv = GridSearchCV(pipe, param_grid)
-    # gscv.fit(X, y)
     pipe.fit(X, y)
     
     acc_scores = cross_val_score(pipe, X, y, cv=skf, scoring='accuracy')

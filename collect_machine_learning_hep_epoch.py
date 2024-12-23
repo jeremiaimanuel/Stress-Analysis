@@ -28,12 +28,17 @@ os.chdir(directory_path)
 ##################### Define What I need in here #####################
     
 include_second_rest = False
-segmented = True
+segmented = True #option is stats, stats_segmented
 
-only_twave = True #IF True, better make n_segment = 4, if False, n_segment = 8
-stats = 'all'
+metrics = ['avg','std'] #write in list. Option: avg, std, med
+
+only_twave = True #IF True, better make n_segment = 2, if False, n_segment = 8
+# filt_30 = False
+
 if only_twave:
-    n_segment = 4
+    epo_tmin = 0.2
+    epo_tmax = 0.6
+    n_segment = 4 #To split each segment into equally 0.1 segment
 else:
     n_segment = 8
 
@@ -60,17 +65,12 @@ def load_epoch_rest2(fdata):
     epoch = mne.read_epochs(rest2_data[fdata], preload=True)
     return(epoch)
 
-# print(file_rest1)
-# fnum = int(input("Choose Data: "))
-
 lda_accuracy =[]
 lda_roc=[]
 svm_accuracy=[]
 svm_roc=[]
 # dataset_used1 = []
 # dataset_used2 = []
-
-
 
 for fnum in range(len(rest1_data)):
 # for fnum in range(14,22):
@@ -81,15 +81,15 @@ for fnum in range(len(rest1_data)):
     epoch_rest2 = load_epoch_rest2(fnum)
     
     if only_twave == True:
-        epoch_rest = epoch_rest.crop(tmin = 0.2, tmax = 0.6)
-        epoch_stress = epoch_stress.crop(tmin = 0.2, tmax = 0.6)
-        epoch_rest2 = epoch_rest2.crop(tmin = 0.2, tmax = 0.6)
+        epoch_rest = epoch_rest.crop(tmin = epo_tmin, tmax = epo_tmax)
+        epoch_stress = epoch_stress.crop(tmin = epo_tmin, tmax = epo_tmax)
+        epoch_rest2 = epoch_rest2.crop(tmin = epo_tmin, tmax = epo_tmax)
     
     array_rest = epoch_rest.get_data()
     array_stress = epoch_stress.get_data()
     array_rest2 = epoch_rest2.get_data()
     
-    def feature_extract(epoch_array, n_segment, segmented = True, stats ='all'):
+    def feature_extract(epoch_array, n_segment, segmented = True):
         
         n_epoch = epoch_array.shape[0]
         n_ch = epoch_array.shape[1]
@@ -97,9 +97,12 @@ for fnum in range(len(rest1_data)):
         
         segment_length = n_signal // n_segment
         
-        if segmented:    
+        
+        if segmented == True:    
             segment_array_avg = np.zeros((n_ch, n_segment *n_epoch +1))
             segment_array_std = np.zeros((n_ch, n_segment *n_epoch +1))
+            segment_array_med = np.zeros((n_ch, n_segment *n_epoch +1))
+            segment_array_sum = np.zeros((n_ch, n_segment *n_epoch +1))
             
             for i in range(n_epoch):
                 data_epoch = epoch_array[i]
@@ -109,62 +112,67 @@ for fnum in range(len(rest1_data)):
                         segment = data_epoch[j, k:k+segment_length]
                         avg_segment = np.average(segment)
                         std_segment = np.std(segment)
+                        med_segment = np.median(segment)
+                        sum_segment = np.sum(np.abs(segment))
                         
                         segment_array_avg[j,segment_index + (n_segment*i)] = avg_segment
                         segment_array_std[j,segment_index + (n_segment*i)] = std_segment
+                        segment_array_med[j,segment_index + (n_segment*i)] = med_segment
+                        segment_array_sum[j,segment_index + (n_segment*i)] = sum_segment
                         segment_index +=1
             
             segment_array_avg = np.array(segment_array_avg).T
             segment_array_std = np.array(segment_array_std).T
-            segment_feature = np.concatenate((segment_array_avg,segment_array_std), axis=1)
+            segment_array_med = np.array(segment_array_med).T
+            segment_array_sum = np.array(segment_array_sum).T
+
+            segmented_metric_map = {
+                    'avg': segment_array_avg,
+                    'std': segment_array_std,
+                    'med': segment_array_med,
+                    'sum': segment_array_sum
+                    }
             
-            if stats == 'all':        
-                return(segment_feature)
-                
-            elif stats == 'avg':
-                return(segment_array_avg)
-                
-            elif stats == 'std':
-                return(segment_array_std)
+            selected_metrics = [segmented_metric_map[m] for m in metrics]
+            return(np.concatenate(selected_metrics, axis=1))
+            
         
         else:
             avg_feature = np.mean(epoch_array, axis=-1)
-            std_feature = np.std(epoch_array, axis = -1)
-            feature = np.concatenate((avg_feature, std_feature), axis=1)
+            std_feature = np.std(epoch_array, axis=-1)
+            med_feature = np.median(epoch_array, axis=-1)
+            sum_feature = np.sum(np.abs(epoch_array), axis=-1)
             
-            if stats == 'all':
-                return(feature)
-            
-            elif stats == 'avg':
-                return(avg_feature)
-            
-            elif stats == 'std':
-                return(std_feature)
+            metric_map = {
+                    'avg': avg_feature,
+                    'std': std_feature,
+                    'med': med_feature,
+                    'sum': sum_feature
+                }
+
+            selected_metrics = [metric_map[m] for m in metrics]
+            return(np.concatenate(selected_metrics, axis=1))
     
-    def ch_name_extract(epoch_array, stats ='all'):
+    def ch_name_extract(epoch_array, metrics ='all'):
         
         eeg_ch_names = epoch_array.ch_names
-        ch_names = []
         
-        if stats =='all':
-            prefixes = ["average.ch.", "std.ch."]
-      
-        elif stats =='avg':
-            prefixes = ["average.ch."]
+        prefixes_map = {
+                'avg': "average.ch.",
+                'std': "std.ch.",
+                'med': "med.ch.",
+                'sum': "sum.ch."
+            }
         
-        elif stats =='std':
-            prefixes = ["std.ch."]
-    
-        for i in prefixes:
-            for j in eeg_ch_names:
-                name = i+j
-                ch_names.append(name)
+        prefixes = [prefixes_map[m] for m in metrics]
+
+        ch_names = [i+j for i in prefixes for j in eeg_ch_names]
         
         return(ch_names)
     
-    feature_rest = feature_extract(array_rest, n_segment, segmented, stats)
-    feature_stress = feature_extract(array_stress, n_segment, segmented, stats)
-    feature_rest2 = feature_extract(array_rest2, n_segment, segmented, stats)
+    feature_rest = feature_extract(array_rest, n_segment, segmented)
+    feature_stress = feature_extract(array_stress, n_segment, segmented)
+    feature_rest2 = feature_extract(array_rest2, n_segment, segmented)
     
     label_rest = len(feature_rest) * [0]
     label_stress = len(feature_stress) * [1]
@@ -183,7 +191,7 @@ for fnum in range(len(rest1_data)):
         label = np.concatenate((label_rest, label_stress))
         label_str = np.concatenate((label_str_rest, label_str_stress))    
     
-    ch_names = ch_name_extract(epoch_rest, stats)
+    ch_names = ch_name_extract(epoch_rest, metrics)
     
     features = pd.DataFrame(feature, columns = ch_names)
     labels = pd.DataFrame(label, columns= ['label'])
@@ -205,7 +213,7 @@ for fnum in range(len(rest1_data)):
     # umap = mp.UMAP(random_state=99)
     # pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
     # tscv = TimeSeriesSplit(n_splits = n_splits)
-    pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
+    pipe = Pipeline([('scaler',scl),('clf',clf)])
     pipe.fit_transform(X,y)
     
     acc_scores_lda = cross_val_score(pipe, X, y, cv=skf, scoring='accuracy')
@@ -226,9 +234,9 @@ for fnum in range(len(rest1_data)):
     n_splits = 5
     scl = StandardScaler()
     skf = StratifiedKFold(n_splits = n_splits)
-    umap = mp.UMAP(random_state=99)
-    pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
-    # pipe = Pipeline([('scl',StandardScaler()),('clf',clf)])
+    # umap = mp.UMAP(random_state=99)
+    # pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
+    pipe = Pipeline([('scl',scl),('clf',clf)])
     # param_grid={'clf__C':[0.25,0.5,0.75, 1]}
     # gscv = GridSearchCV(pipe, param_grid)
     # gscv.fit(X, y)

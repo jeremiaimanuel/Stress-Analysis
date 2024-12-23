@@ -26,20 +26,20 @@ segmented = True #option is stats, stats_segmented
 metrics = ['avg','std'] #write in list. Option: avg, std, med
 
 only_twave = True #IF True, better make n_segment = 2, if False, n_segment = 8
-filt_30 = False
+# filt_30 = False
 
 if only_twave:
     epo_tmin = 0.2
     epo_tmax = 0.6
-    n_segment = int((epo_tmax-epo_tmin)*10) #To split each segment into equally 0.1 segment
+    n_segment = 4 #To split each segment into equally 0.1 segment
 else:
     n_segment = 8
 
 ##################### Define What I need in here #####################
 
 # fpath = 'epoch_data'
-# fpath = 'hep_asr'
-fpath = 'hep_ica_all'
+fpath = 'hep_asr'
+# fpath = 'hep_ica_all'
 
 rest1_data = [os.path.join(fpath,i) for i in os.listdir(fpath) if i.endswith('first-epo.fif')]
 stress_data = [os.path.join(fpath,i) for i in os.listdir(fpath) if i.endswith('stress-epo.fif')]
@@ -49,26 +49,36 @@ file_rest1 = {number: rest1_data[number] for number in range(len(rest1_data))}
 file_stress = {number: stress_data[number] for number in range(len(stress_data))}
 file_rest2 = {number: rest2_data[number] for number in range(len(rest2_data))}
 
-if filt_30 == True:
-    def load_epoch_rest1(fdata):
-        epoch = mne.read_epochs(rest1_data[fdata], preload=True).filter(1,30)
-        return(epoch)
-    def load_epoch_stress(fdata):
-        epoch = mne.read_epochs(stress_data[fdata], preload=True).filter(1,30)
-        return(epoch)
-    def load_epoch_rest2(fdata):
-        epoch = mne.read_epochs(rest2_data[fdata], preload=True).filter(1,30)
-        return(epoch)
-else:
-    def load_epoch_rest1(fdata):
-        epoch = mne.read_epochs(rest1_data[fdata], preload=True)
-        return(epoch)
-    def load_epoch_stress(fdata):
-        epoch = mne.read_epochs(stress_data[fdata], preload=True)
-        return(epoch)
-    def load_epoch_rest2(fdata):
-        epoch = mne.read_epochs(rest2_data[fdata], preload=True)
-        return(epoch)
+# if filt_30 == True:
+#     def load_epoch_rest1(fdata):
+#         epoch = mne.read_epochs(rest1_data[fdata], preload=True).filter(1,30)
+#         return(epoch)
+#     def load_epoch_stress(fdata):
+#         epoch = mne.read_epochs(stress_data[fdata], preload=True).filter(1,30)
+#         return(epoch)
+#     def load_epoch_rest2(fdata):
+#         epoch = mne.read_epochs(rest2_data[fdata], preload=True).filter(1,30)
+#         return(epoch)
+# else:
+#     def load_epoch_rest1(fdata):
+#         epoch = mne.read_epochs(rest1_data[fdata], preload=True)
+#         return(epoch)
+#     def load_epoch_stress(fdata):
+#         epoch = mne.read_epochs(stress_data[fdata], preload=True)
+#         return(epoch)
+#     def load_epoch_rest2(fdata):
+#         epoch = mne.read_epochs(rest2_data[fdata], preload=True)
+#         return(epoch)
+
+def load_epoch_rest1(fdata):
+    epoch = mne.read_epochs(rest1_data[fdata], preload=True)
+    return(epoch)
+def load_epoch_stress(fdata):
+    epoch = mne.read_epochs(stress_data[fdata], preload=True)
+    return(epoch)
+def load_epoch_rest2(fdata):
+    epoch = mne.read_epochs(rest2_data[fdata], preload=True)
+    return(epoch)
 
 print(file_rest1)
 fnum = int(input("Choose Data: "))
@@ -176,7 +186,7 @@ label_stress = len(feature_stress) * [1]
 label_rest2 = len(feature_rest2) * [2]
 
 label_str_rest = len(feature_rest) * ['Rest 1']
-label_str_stress = len(feature_stress) * ['Stress']
+label_str_stress = len(feature_stress) * ['Task']
 label_str_rest2 = len(feature_rest2) * ['Rest 2']
 
 if include_second_rest == True:
@@ -220,8 +230,8 @@ fig, ax = plt.subplots(figsize=(10, 7))
 bp = ax.boxplot(data)
 
 # Adding titles and labels
-ax.set_title(f'Dataset {fnum}: Rest vs Stress (All Channels {metrics[0]})', fontsize=14)
-ax.set_xticklabels(['Rest', 'Stress'], fontsize=12)
+ax.set_title(f'Dataset {fnum}: Rest vs Task (All Channels {metrics[0]},{metrics[1]})', fontsize=14)
+ax.set_xticklabels(['Rest', 'Task'], fontsize=12)
 ax.set_ylabel('Value ', fontsize=12)
 # ax.set_ylim(-7e-5,7e-5)
 
@@ -241,8 +251,8 @@ for i in range(len(ch_names)):
     bp = ax.boxplot(data)
     
     # Adding titles and labels
-    ax.set_title(f'Dataset {fnum}: Rest vs Stress ({ch_names[i]})', fontsize=14)
-    ax.set_xticklabels(['Rest', 'Stress'], fontsize=12)
+    ax.set_title(f'Dataset {fnum}: Rest vs Task ({ch_names[i]})', fontsize=14)
+    ax.set_xticklabels(['Rest', 'Task'], fontsize=12)
     ax.set_ylabel('Value ', fontsize=12)
     # ax.set_ylim(-7e-5,7e-5)
     
@@ -319,11 +329,10 @@ scl = StandardScaler()
 n_splits = 5
 # gkf = KFold(n_splits = n_splits)
 skf = StratifiedKFold(n_splits = n_splits)
-# pipe = Pipeline([('scaler',StandardScaler()),('clf',clf)])
+pipe = Pipeline([('scaler',scl),('clf',clf)])
 # pca = PCA(n_components = 2, random_state=99)
-# pipe = Pipeline([('scl',scl),('pca', pca),('clf',clf)])
-umap = mp.UMAP(random_state=99)
-pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
+# umap = mp.UMAP(random_state=99)
+# pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
 pipe.fit(X,y)
 
 acc_scores = cross_val_score(pipe, X, y, cv=skf, scoring='accuracy')
@@ -359,11 +368,19 @@ for train_idx, test_idx in skf.split(X, y):
     X_test_lda = pipe.transform(X_test)
     
     # Plot LDA for this fold
-    plt.figure()
+    plt.figure(figsize=(8, 5))
     for i in np.unique(y_train):
-        plt.scatter(X_train_lda[y_train == i], np.zeros_like(X_train_lda[y_train == i]), alpha=.8, label=f'Class {i} (train)')
+        if i == 0:
+            label = 'Rest (Train)'
+        elif i == 1:
+            label = 'Task (Train)'
+        plt.scatter(X_train_lda[y_train == i], np.zeros_like(X_train_lda[y_train == i]), alpha=.8, label=label)
     for i in np.unique(y_test):
-        plt.scatter(X_test_lda[y_test == i], np.zeros_like(X_test_lda[y_test == i])-0.05, alpha=.8, label=f'Class {i} (test)')
+        if i == 0:
+            label = 'Rest (Test)'
+        elif i == 1:
+            label = 'Task (Test)'
+        plt.scatter(X_test_lda[y_test == i], np.zeros_like(X_test_lda[y_test == i])-0.05, alpha=.8, label=label)
     
     plt.legend(loc='best', shadow=False)
     plt.yticks([])  # No need for y-axis ticks in 1D plot
@@ -386,8 +403,8 @@ skf = StratifiedKFold(n_splits = n_splits)
 # pca = PCA(n_components = 2, random_state=99)
 # pipe = Pipeline([('scl',scl),('pca', pca),('clf',clf)])
 umap = mp.UMAP(random_state=99)
-pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
-# pipe = Pipeline([('scl',StandardScaler()),('clf',clf)])
+# pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
+pipe = Pipeline([('scl',scl),('clf',clf)])
 # param_grid={'clf__C':[0.25,0.5,0.75, 1]}
 # gscv = GridSearchCV(pipe, param_grid)
 # gscv.fit(X, y)
@@ -442,29 +459,29 @@ for train_idx, test_idx in skf.split(X, y):
     grid = np.c_[xx.ravel(), yy.ravel()]
     Z = np.reshape(clf.predict(grid), xx.shape)
 
-    plt.figure()
+    plt.figure(figsize=(8, 5))
     plt.contourf(xx, yy, Z, alpha=0.3,cmap = ListedColormap(('green','red')))
     plt.xlim(xx.min(),xx.max())
     plt.ylim(yy.min(),yy.max())
 
     for i,j in enumerate(np.unique(y_train)):
         if j == 0:
-            label = 'Rest_train'
+            label = 'Rest (Train)'
         else:
-            label = 'Stress_train'
+            label = 'Task (Train)'
         plt.scatter(X_train_reduced[y_train ==j,0],X_train_reduced[y_train==j,1],
                     c=ListedColormap(('limegreen','lightcoral'))(i),label=label)
     
     for i,j in enumerate(np.unique(y_test)):
         if j == 0:
-            label = 'Rest_test'
+            label = 'Rest (Test)'
         else:
-            label = 'Stress_test'
+            label = 'Task (Test)'
         plt.scatter(X_test_reduced[y_test ==j,0],X_test_reduced[y_test==j,1],
                     c=ListedColormap(('green','red'))(i),label=label)
     
     plt.legend()
-    plt.title(f'Decision Boundary for Linear SVC fold {fold_idx}')
+    plt.title(f'UMAP Dimension Reduction for Linear SVC fold {fold_idx}')
     plt.show()
 
     fold_idx+=1
