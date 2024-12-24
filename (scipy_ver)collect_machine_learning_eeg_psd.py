@@ -49,7 +49,7 @@ def abs_power_extraction(signal, fs, l_freq, h_freq, tmin, tmax, t_seg = 10, nov
 
     freq_data = []
 
-    segment_length = t_seg*fs  # seconds
+    segment_length = (t_seg*fs)+1  # seconds
     overlap = int(segment_length*noverlap)  # usually t_overlap = 9 seconds, so overlap about 90% of segment
 
     for i in range(len(signal)):
@@ -160,9 +160,9 @@ for file_number in range(len(files)):
     beta_data_stress = abs_power_extraction(eeg_data, fs, 12, 30, eeg_newseg1, eeg_newseg2)
     beta_data_rest2 = abs_power_extraction(eeg_data, fs, 12, 30, eeg_newseg2, eeg_newseg3)
     
-    gamma_data_rest = abs_power_extraction(eeg_data, fs, 30, 45, 0, eeg_newseg1)
-    gamma_data_stress = abs_power_extraction(eeg_data, fs, 30, 45, eeg_newseg1, eeg_newseg2)
-    gamma_data_rest2 = abs_power_extraction(eeg_data, fs, 30, 45, eeg_newseg2, eeg_newseg3)
+    gamma_data_rest = abs_power_extraction(eeg_data, fs, 30, 40, 0, eeg_newseg1)
+    gamma_data_stress = abs_power_extraction(eeg_data, fs, 30, 40, eeg_newseg1, eeg_newseg2)
+    gamma_data_rest2 = abs_power_extraction(eeg_data, fs, 30, 40, eeg_newseg2, eeg_newseg3)
     
     data_list_rest = np.concatenate((theta_data_rest,alpha_data_rest,beta_data_rest,gamma_data_rest))
     data_list_stress = np.concatenate((theta_data_stress,alpha_data_stress,beta_data_stress,gamma_data_stress))

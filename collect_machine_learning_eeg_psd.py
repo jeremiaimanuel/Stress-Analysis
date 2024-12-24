@@ -48,14 +48,16 @@ def welch_extraction_mne(raw, l_freq, h_freq, tmin, tmax, t_seg=10, t_overlap=9)
     
     signal = raw.copy().crop(tmin=tmin, tmax=tmax)
     
-    psd_epochs = mne.make_fixed_length_epochs(signal, duration = t_seg, overlap = t_overlap)
+    psd_epochs = mne.make_fixed_length_epochs(signal, duration = t_seg+0.001, overlap = t_overlap)
     
     psd_results = psd_epochs.compute_psd(
         method='welch', 
         fmin=l_freq, 
         fmax=h_freq,
         window='hann',
-        n_fft=int(len(psd_epochs.times)))
+        n_fft=int(len(psd_epochs.times))\
+            
+            )
     
     abs_arr_psd = np.sum(np.abs(psd_results.get_data()), axis = 2) #Absolute PSD Calculated here
     

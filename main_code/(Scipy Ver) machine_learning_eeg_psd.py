@@ -95,7 +95,7 @@ def abs_power_extraction(signal, fs, l_freq, h_freq, tmin, tmax, t_seg = 10, nov
 
     freq_data = []
 
-    segment_length = t_seg*fs  # seconds
+    segment_length = (t_seg*fs)+1  # seconds
     overlap = int(segment_length*noverlap)  # usually t_overlap = 9 seconds, so overlap about 90% of segment
 
     for i in range(len(signal)):
@@ -137,9 +137,9 @@ beta_data_rest = abs_power_extraction(eeg_data, fs, 12, 30, 0, eeg_newseg1)
 beta_data_stress = abs_power_extraction(eeg_data, fs, 12, 30, eeg_newseg1, eeg_newseg2)
 beta_data_rest2 = abs_power_extraction(eeg_data, fs, 12, 30, eeg_newseg2, eeg_newseg3)
 
-gamma_data_rest = abs_power_extraction(eeg_data, fs, 30, 45, 0, eeg_newseg1)
-gamma_data_stress = abs_power_extraction(eeg_data, fs, 30, 45, eeg_newseg1, eeg_newseg2)
-gamma_data_rest2 = abs_power_extraction(eeg_data, fs, 30, 45, eeg_newseg2, eeg_newseg3)
+gamma_data_rest = abs_power_extraction(eeg_data, fs, 30, 40, 0, eeg_newseg1)
+gamma_data_stress = abs_power_extraction(eeg_data, fs, 30, 40, eeg_newseg1, eeg_newseg2)
+gamma_data_rest2 = abs_power_extraction(eeg_data, fs, 30, 40, eeg_newseg2, eeg_newseg3)
 
 data_list_rest = np.concatenate((theta_data_rest,alpha_data_rest,beta_data_rest,gamma_data_rest))
 data_list_stress = np.concatenate((theta_data_stress,alpha_data_stress,beta_data_stress,gamma_data_stress))
@@ -165,18 +165,18 @@ else:
     feature_arr = feature_arr.T
 ###############################################################################
 
-from scipy.stats import ttest_ind
+# from scipy.stats import ttest_ind
 
-t_test_data = ttest_ind(data_list_rest.T,data_list_stress.T)
-print(t_test_data.pvalue)
+# t_test_data = ttest_ind(data_list_rest.T,data_list_stress.T)
+# print(t_test_data.pvalue)
 
-p_value = t_test_data.pvalue
+# p_value = t_test_data.pvalue
 
-p_value_data = np.column_stack((new_eeg_ch_names, p_value))
+# p_value_data = np.column_stack((new_eeg_ch_names, p_value))
 
-for i in range(len(p_value)):
-    if p_value[i] <= 0.05:
-        print(i)
+# for i in range(len(p_value)):
+#     if p_value[i] <= 0.05:
+#         print(i)
 
 ###############################################################################
 ############################# DATA FRAME FEATURE #############################
@@ -222,7 +222,7 @@ import seaborn as sns
 
 %matplotlib inline
 
-sns.set(style='white', context='notebook', rc={'figure.figsize':(14,10)})
+# sns.set(style='white', context='notebook', rc={'figure.figsize':(14,10)})
 # sns.set(style='white', context='notebook', rc={'figure.figsize':(54,50)})
 
 # sns.pairplot(df_5features, hue = 'status',palette= "tab10")
@@ -231,9 +231,9 @@ sns.set(style='white', context='notebook', rc={'figure.figsize':(14,10)})
 # sns.pairplot(df_beta, hue = 'status',palette= "tab10")
 # sns.pairplot(df_gamma, hue = 'status',palette= "tab10")
 
-df_tp10 = X.filter(like='ch.gamma.TP10')
-df_tp10 = labels_str.join(df_tp10)
-sns.pairplot(df_tp10, hue = 'status',palette= "tab10")
+# df_tp10 = X.filter(like='ch.gamma.TP10')
+# df_tp10 = labels_str.join(df_tp10)
+# sns.pairplot(df_tp10, hue = 'status',palette= "tab10")
 
 # reducer = mp.UMAP()
 # scaled_data = StandardScaler().fit_transform(X)

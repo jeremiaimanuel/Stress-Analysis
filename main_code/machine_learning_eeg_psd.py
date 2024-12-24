@@ -94,7 +94,7 @@ def welch_extraction_mne(raw, l_freq, h_freq, tmin, tmax, t_seg=10, t_overlap=9)
     
     signal = raw.copy().crop(tmin=tmin, tmax=tmax)
     
-    psd_epochs = mne.make_fixed_length_epochs(signal, duration = t_seg, overlap = t_overlap)
+    psd_epochs = mne.make_fixed_length_epochs(signal, duration = t_seg+0.001, overlap = t_overlap)
     
     psd_results = psd_epochs.compute_psd(
         method='welch', 
@@ -147,18 +147,18 @@ else:
     feature_arr = feature_arr.T
 ###############################################################################
 
-from scipy.stats import ttest_ind
+# from scipy.stats import ttest_ind
 
-t_test_data = ttest_ind(data_list_rest.T,data_list_stress.T)
-print(t_test_data.pvalue)
+# t_test_data = ttest_ind(data_list_rest.T,data_list_stress.T)
+# print(t_test_data.pvalue)
 
-p_value = t_test_data.pvalue
+# p_value = t_test_data.pvalue
 
-p_value_data = np.column_stack((new_eeg_ch_names, p_value))
+# p_value_data = np.column_stack((new_eeg_ch_names, p_value))
 
-for i in range(len(p_value)):
-    if p_value[i] <= 0.05:
-        print(i)
+# for i in range(len(p_value)):
+#     if p_value[i] <= 0.05:
+#         print(i)
 
 ###############################################################################
 ############################# DATA FRAME FEATURE #############################
@@ -204,7 +204,7 @@ import seaborn as sns
 
 %matplotlib inline
 
-sns.set(style='white', context='notebook', rc={'figure.figsize':(14,10)})
+# sns.set(style='white', context='notebook', rc={'figure.figsize':(14,10)})
 # sns.set(style='white', context='notebook', rc={'figure.figsize':(54,50)})
 
 # sns.pairplot(df_5features, hue = 'status',palette= "tab10")
@@ -213,9 +213,9 @@ sns.set(style='white', context='notebook', rc={'figure.figsize':(14,10)})
 # sns.pairplot(df_beta, hue = 'status',palette= "tab10")
 # sns.pairplot(df_gamma, hue = 'status',palette= "tab10")
 
-df_tp10 = X.filter(like='ch.gamma.TP10')
-df_tp10 = labels_str.join(df_tp10)
-sns.pairplot(df_tp10, hue = 'status',palette= "tab10")
+# df_tp10 = X.filter(like='ch.gamma.TP10')
+# df_tp10 = labels_str.join(df_tp10)
+# sns.pairplot(df_tp10, hue = 'status',palette= "tab10")
 
 # reducer = mp.UMAP()
 # scaled_data = StandardScaler().fit_transform(X)
@@ -322,7 +322,7 @@ n_splits = 5
 scl = StandardScaler()
 gkf = KFold(n_splits = n_splits)
 skf = StratifiedKFold(n_splits = n_splits)
-# umap = mp.UMAP(random_state=99)
+umap = mp.UMAP(random_state=99)
 # pipe = Pipeline([('scl',scl),('umap', umap),('clf',clf)])
 pipe = Pipeline([('scl',scl),('clf',clf)])
 # param_grid={'clf__C':[0.25,0.5,0.75, 1]}
