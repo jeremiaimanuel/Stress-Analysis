@@ -305,7 +305,7 @@ for train_idx, test_idx in skf.split(X, y):
     
     plt.legend(loc='best', shadow=False)
     plt.yticks([])  # No need for y-axis ticks in 1D plot
-    plt.title(f'LDA of dataset for fold {fold_idx}')
+    plt.title(f'LDA fold {fold_idx}')
     plt.xlabel('Linear Discriminant')
     plt.show()
 
@@ -399,7 +399,7 @@ for train_idx, test_idx in skf.split(X, y):
     plt.legend()
     plt.xlabel('Feature 1')
     plt.ylabel('Feature 2')
-    plt.title(f'Decision Boundary for Linear SVC fold {fold_idx}')
+    plt.title(f'Linear SVC fold {fold_idx} (with UMAP Dimension Reduction)')
     plt.show()
 
     fold_idx+=1
