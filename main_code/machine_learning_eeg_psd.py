@@ -36,8 +36,8 @@ def load_fif_file(fdata):
     return (raw)
 
 print(files)
-file_number = int(input("Choose File: "))
-raw = load_fif_file(file_number)
+fnum = int(input("Choose File: "))
+raw = load_fif_file(fnum)
 raw.load_data()
 
 events, event_ids = mne.events_from_annotations(raw)
@@ -49,10 +49,10 @@ trg1 = events[1,0] #Task Begin
 trg2 = events[-2,0] #Task End
 trg3 = events[-1,0] #Experiment End
 
-if 'B98_jikken_0001' in files[file_number]:
+if 'B98_jikken_0001' in files[fnum]:
     trg2 = events[-1, 0]
     trg3 = trg0 + 900000
-elif any(keyword in files[file_number] for keyword in ['B83', 'B74', 'B94']):
+elif any(keyword in files[fnum] for keyword in ['B83', 'B74', 'B94']):
     trg2 = events[-3, 0]  # Task End
 
 tmin = trg0/fs
@@ -248,6 +248,23 @@ import seaborn as sns
 
 # ############################## DATA VISUALIZATION ##############################
 
+####### Naming Title for Plot #######
+subjects = ['C', 'D', 'E', 'F', 'G']
+Subject = subjects[(fnum // 4) % len(subjects)]
+
+if fnum in [1,4,5,8,9,12,13,16,17,20,21]:
+    task = 'MAT'
+else:
+    task = 'SCWT'
+
+if (fnum%2) ==0:
+    time = '5 Mins'
+else:
+    time = '2 Mins'
+
+feature_name = 'AP'
+####### Naming Title for Plot #######
+
 ################################ CLASSIFICATION 1 ################################
 
 clf = LinearDiscriminantAnalysis()
@@ -275,6 +292,7 @@ print(classification_report(y,y_pred))
 #######Plot LDA on each Fold#######
 fold_idx = 1
 for train_idx, test_idx in skf.split(X, y):
+    
     print(len(train_idx), len(test_idx))
     
     # Use .iloc[] for DataFrame and [] for numpy arrays
@@ -290,23 +308,28 @@ for train_idx, test_idx in skf.split(X, y):
     
     # Plot LDA for this fold
     plt.figure(figsize=(8, 5))
+    plt.axhline(y= 0, c = 'black',zorder=1)
+    plt.axhline(y= -0.05, c = 'black',zorder=1)
     for i in np.unique(y_train):
         if i == 0:
             label = 'Rest (Train)'
         elif i == 1:
             label = 'Task (Train)'
-        plt.scatter(X_train_lda[y_train == i], np.zeros_like(X_train_lda[y_train == i]), alpha=.8, label=label)
+        plt.scatter(X_train_lda[y_train == i], np.zeros_like(X_train_lda[y_train == i]), alpha=.8, label=label,zorder=2)
     for i in np.unique(y_test):
         if i == 0:
             label = 'Rest (Test)'
         elif i == 1:
             label = 'Task (Test)'
-        plt.scatter(X_test_lda[y_test == i], np.zeros_like(X_test_lda[y_test == i])-0.05, alpha=.8, label=label)
+        plt.scatter(X_test_lda[y_test == i], np.zeros_like(X_test_lda[y_test == i])-0.05, alpha=.8, label=label,zorder=2)
     
     plt.legend(loc='best', shadow=False)
     plt.yticks([])  # No need for y-axis ticks in 1D plot
-    plt.title(f'LDA fold {fold_idx}')
+    plt.title(f'LDA fold {fold_idx}\nSubject {Subject} | {task} | {time} | {feature_name}')
+    # plt.title('LDA of Train and Test Data')
     plt.xlabel('Linear Discriminant')
+    plt.text(x=0, y=-0.003, s="Hyperplane LDA Train", fontsize=10)
+    plt.text(x=0, y=-0.048, s="Hyperplane LDA Test", fontsize=10)
     plt.show()
 
     fold_idx += 1
@@ -399,7 +422,8 @@ for train_idx, test_idx in skf.split(X, y):
     plt.legend()
     plt.xlabel('Feature 1')
     plt.ylabel('Feature 2')
-    plt.title(f'Linear SVC fold {fold_idx} (with UMAP Dimension Reduction)')
+    plt.title(f'Linear SVC fold {fold_idx} (with UMAP Dimension Reduction)\nSubject {Subject} | {task} | {time} | {feature_name}')
+    # plt.title('Decision Boundary for Linear SVM')
     plt.show()
 
     fold_idx+=1
@@ -409,62 +433,62 @@ for train_idx, test_idx in skf.split(X, y):
 
 #######Plot Absolute Power#######
 
-seg1 = len(theta_data_rest.T)
-seg2 = seg1+len(theta_data_stress.T)
-# seg3 = seg2+len(theta_data_rest2.T)
+# seg1 = len(theta_data_rest.T)
+# seg2 = seg1+len(theta_data_stress.T)
+# # seg3 = seg2+len(theta_data_rest2.T)
 
-# theta_data =  np.concatenate((theta_data_rest,theta_data_stress,theta_data_rest2),axis=1)
-theta_data =  np.concatenate((theta_data_rest,theta_data_stress),axis=1)
-for i in range(len(theta_data)):
-    plt.figure(figsize = (20,4))
-    plt.plot(theta_data[i])
-    plt.hlines(y=np.average(theta_data_rest[i].T),xmin=0, xmax=seg1)
-    plt.hlines(y=np.average(theta_data_stress[i].T),xmin=seg1, xmax=seg2)
-    # plt.hlines(y=np.average(theta_data_rest2[i].T), xmin=seg2, xmax=seg3)
-    plt.axvline(x = seg1, color = 'r')
-    # plt.axvline(x = seg2, color = 'r')
-    plt.title(f'Absolute Power of Theta Band on Channel {eeg_ch_names[i]}',fontsize=18)
-    plt.xlabel('Sample')
-    plt.ylabel('μV**2/Hz')
+# # theta_data =  np.concatenate((theta_data_rest,theta_data_stress,theta_data_rest2),axis=1)
+# theta_data =  np.concatenate((theta_data_rest,theta_data_stress),axis=1)
+# for i in range(len(theta_data)):
+#     plt.figure(figsize = (20,4))
+#     plt.plot(theta_data[i])
+#     plt.hlines(y=np.average(theta_data_rest[i].T),xmin=0, xmax=seg1)
+#     plt.hlines(y=np.average(theta_data_stress[i].T),xmin=seg1, xmax=seg2)
+#     # plt.hlines(y=np.average(theta_data_rest2[i].T), xmin=seg2, xmax=seg3)
+#     plt.axvline(x = seg1, color = 'r')
+#     # plt.axvline(x = seg2, color = 'r')
+#     plt.title(f'Absolute Power of Theta Band on Channel {eeg_ch_names[i]}',fontsize=18)
+#     plt.xlabel('Sample')
+#     plt.ylabel('μV**2/Hz')
 
-# alpha_data =  np.concatenate((alpha_data_rest,alpha_data_stress,alpha_data_rest2),axis=1)
-alpha_data =  np.concatenate((alpha_data_rest,alpha_data_stress),axis=1)
-for i in range(len(alpha_data)):
-    plt.figure(figsize = (20,4))
-    plt.plot(alpha_data[i])
-    plt.hlines(y=np.average(alpha_data_rest[i].T),xmin=0, xmax=seg1)
-    plt.hlines(y=np.average(alpha_data_stress[i].T),xmin=seg1, xmax=seg2)
-    # plt.hlines(y=np.average(alpha_data_rest2[i].T), xmin=seg2, xmax=seg3)
-    plt.axvline(x = seg1, color = 'r')
-    # plt.axvline(x = seg2, color = 'r')
-    plt.title(f'Absolute Power of Alpha Band on Channel {eeg_ch_names[i]}',fontsize=18)
-    plt.xlabel('Sample')
-    plt.ylabel('μV**2/Hz')
+# # alpha_data =  np.concatenate((alpha_data_rest,alpha_data_stress,alpha_data_rest2),axis=1)
+# alpha_data =  np.concatenate((alpha_data_rest,alpha_data_stress),axis=1)
+# for i in range(len(alpha_data)):
+#     plt.figure(figsize = (20,4))
+#     plt.plot(alpha_data[i])
+#     plt.hlines(y=np.average(alpha_data_rest[i].T),xmin=0, xmax=seg1)
+#     plt.hlines(y=np.average(alpha_data_stress[i].T),xmin=seg1, xmax=seg2)
+#     # plt.hlines(y=np.average(alpha_data_rest2[i].T), xmin=seg2, xmax=seg3)
+#     plt.axvline(x = seg1, color = 'r')
+#     # plt.axvline(x = seg2, color = 'r')
+#     plt.title(f'Absolute Power of Alpha Band on Channel {eeg_ch_names[i]}',fontsize=18)
+#     plt.xlabel('Sample')
+#     plt.ylabel('μV**2/Hz')
     
-# beta_data =  np.concatenate((beta_data_rest,beta_data_stress,beta_data_rest2),axis=1)
-beta_data =  np.concatenate((beta_data_rest,beta_data_stress),axis=1)
-for i in range(len(alpha_data)):
-    plt.figure(figsize = (20,4))
-    plt.plot(beta_data[i])
-    plt.hlines(y=np.average(beta_data_rest[i].T),xmin=0, xmax=seg1)
-    plt.hlines(y=np.average(beta_data_stress[i].T),xmin=seg1, xmax=seg2)
-    # plt.hlines(y=np.average(beta_data_rest2[i].T), xmin=seg2, xmax=seg3)
-    plt.axvline(x = seg1, color = 'r')
-    # plt.axvline(x = seg2, color = 'r')
-    plt.title(f'Absolute Power of Beta Band on Channel {eeg_ch_names[i]}',fontsize=18)
-    plt.xlabel('Sample')
-    plt.ylabel('μV**2/Hz')
+# # beta_data =  np.concatenate((beta_data_rest,beta_data_stress,beta_data_rest2),axis=1)
+# beta_data =  np.concatenate((beta_data_rest,beta_data_stress),axis=1)
+# for i in range(len(alpha_data)):
+#     plt.figure(figsize = (20,4))
+#     plt.plot(beta_data[i])
+#     plt.hlines(y=np.average(beta_data_rest[i].T),xmin=0, xmax=seg1)
+#     plt.hlines(y=np.average(beta_data_stress[i].T),xmin=seg1, xmax=seg2)
+#     # plt.hlines(y=np.average(beta_data_rest2[i].T), xmin=seg2, xmax=seg3)
+#     plt.axvline(x = seg1, color = 'r')
+#     # plt.axvline(x = seg2, color = 'r')
+#     plt.title(f'Absolute Power of Beta Band on Channel {eeg_ch_names[i]}',fontsize=18)
+#     plt.xlabel('Sample')
+#     plt.ylabel('μV**2/Hz')
     
-# gamma_data =  np.concatenate((gamma_data_rest,gamma_data_stress,gamma_data_rest2),axis=1)
-gamma_data =  np.concatenate((gamma_data_rest,gamma_data_stress),axis=1)
-for i in range(len(gamma_data)):
-    plt.figure(figsize = (20,4))
-    plt.plot(gamma_data[i])
-    plt.hlines(y=np.average(gamma_data_rest[i].T),xmin=0, xmax=seg1)
-    plt.hlines(y=np.average(gamma_data_stress[i].T),xmin=seg1, xmax=seg2)
-    # plt.hlines(y=np.average(gamma_data_rest2[i].T), xmin=seg2, xmax=seg3)
-    plt.axvline(x = seg1, color = 'r')
-    # plt.axvline(x = seg2, color = 'r')
-    plt.title(f'Absolute Power of Gamma Band on Channel {eeg_ch_names[i]}',fontsize=18)
-    plt.xlabel('Sample')
-    plt.ylabel('μV**2/Hz')
+# # gamma_data =  np.concatenate((gamma_data_rest,gamma_data_stress,gamma_data_rest2),axis=1)
+# gamma_data =  np.concatenate((gamma_data_rest,gamma_data_stress),axis=1)
+# for i in range(len(gamma_data)):
+#     plt.figure(figsize = (20,4))
+#     plt.plot(gamma_data[i])
+#     plt.hlines(y=np.average(gamma_data_rest[i].T),xmin=0, xmax=seg1)
+#     plt.hlines(y=np.average(gamma_data_stress[i].T),xmin=seg1, xmax=seg2)
+#     # plt.hlines(y=np.average(gamma_data_rest2[i].T), xmin=seg2, xmax=seg3)
+#     plt.axvline(x = seg1, color = 'r')
+#     # plt.axvline(x = seg2, color = 'r')
+#     plt.title(f'Absolute Power of Gamma Band on Channel {eeg_ch_names[i]}',fontsize=18)
+#     plt.xlabel('Sample')
+#     plt.ylabel('μV**2/Hz')

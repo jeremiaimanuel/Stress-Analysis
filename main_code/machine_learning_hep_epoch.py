@@ -1,3 +1,5 @@
+
+
 # -*- coding: utf-8 -*-
 """
 Created on Wed Jul 31 15:31:47 2024
@@ -85,6 +87,14 @@ fnum = int(input("Choose Data: "))
 epoch_rest = load_epoch_rest1(fnum)
 epoch_stress = load_epoch_stress(fnum)
 epoch_rest2 = load_epoch_rest2(fnum)
+
+# ####Save HEP Epoch Image
+# times = [-0.005, -0.003, 0, 0.003, 0.005]
+# fig1 = epoch_rest.average().plot_joint(times=times)
+# fig1.savefig(f'HEP_images/dataset {fnum} rest')
+# fig2 = epoch_stress.average().plot_joint(times=times)
+# fig2.savefig(f'HEP_images/dataset {fnum} task')
+# ####Save HEP Epoch Image
 
 if only_twave == True:
     epoch_rest = epoch_rest.crop(tmin = epo_tmin, tmax = epo_tmax)
@@ -322,6 +332,23 @@ import seaborn as sns
 # plt.gca().set_aspect('equal', 'datalim')
 # plt.title('UMAP projection of the Dataset', fontsize=24)
 
+####### Naming Title for Plot #######
+subjects = ['C', 'D', 'E', 'F', 'G']
+Subject = subjects[(fnum // 4) % len(subjects)]
+
+if fnum in [1,4,5,8,9,12,13,16,17,20,21]:
+    task = 'MAT'
+else:
+    task = 'SCWT'
+
+if (fnum%2) ==0:
+    time = '5 Mins'
+else:
+    time = '2 Mins'
+    
+feature_name = 'HEP'
+####### Naming Title for Plot #######
+
 ################################ CLASSIFICATION 1 ################################
 
 clf = LinearDiscriminantAnalysis()
@@ -368,7 +395,9 @@ for train_idx, test_idx in skf.split(X, y):
     X_test_lda = pipe.transform(X_test)
     
     # Plot LDA for this fold
-    plt.figure(figsize=(8, 5))
+    fig = plt.figure(figsize=(8, 5))
+    plt.axhline(y= 0, c = 'black',zorder=1)
+    plt.axhline(y= -0.05, c = 'black',zorder=1)
     for i in np.unique(y_train):
         if i == 0:
             label = 'Rest (Train)'
@@ -384,9 +413,12 @@ for train_idx, test_idx in skf.split(X, y):
     
     plt.legend(loc='best', shadow=False)
     plt.yticks([])  # No need for y-axis ticks in 1D plot
-    plt.title(f'LDA fold {fold_idx}')
+    plt.title(f'LDA fold {fold_idx}\nSubject {Subject} | {task} | {time} | {feature_name}')
     plt.xlabel('Linear Discriminant')
+    plt.text(x=0, y=-0.003, s="Hyperplane LDA Train", fontsize=10)
+    plt.text(x=0, y=-0.048, s="Hyperplane LDA Test", fontsize=10)
     plt.show()
+    fig.savefig(f'dataset {fnum} fold {fold_idx}, new')
 
     fold_idx += 1
 #######Plot LDA on each Fold#######
@@ -459,7 +491,7 @@ for train_idx, test_idx in skf.split(X, y):
     grid = np.c_[xx.ravel(), yy.ravel()]
     Z = np.reshape(clf.predict(grid), xx.shape)
 
-    plt.figure(figsize=(8, 5))
+    fig = plt.figure(figsize=(8, 5))
     plt.contourf(xx, yy, Z, alpha=0.3,cmap = ListedColormap(('green','red')))
     plt.xlim(xx.min(),xx.max())
     plt.ylim(yy.min(),yy.max())
@@ -483,8 +515,9 @@ for train_idx, test_idx in skf.split(X, y):
     plt.legend()
     plt.xlabel('Feature 1')
     plt.ylabel('Feature 2')
-    plt.title(f'Linear SVC fold {fold_idx} (with UMAP Dimension Reduction)')
+    plt.title(f'Linear SVC fold {fold_idx} (with UMAP Dimension Reduction)\nSubject {Subject} | {task} | {time} | {feature_name}')
     plt.show()
+    fig.savefig(f'dataset {fnum} fold {fold_idx}, new')
 
     fold_idx+=1
 #######Plot SVM#######
