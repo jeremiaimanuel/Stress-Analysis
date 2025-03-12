@@ -37,7 +37,7 @@ folder_epoch_ecg = "ecg_epoch"
 
 #####################################################
 
-counter = 8
+counter = 8 #Choose file number, extract certain specific EEG data
 
 raw = mne.io.read_raw_brainvision(os.path.join(folder_raw, fpath_raw[counter]))
 
@@ -183,7 +183,7 @@ save_hep(folder_asr,fpath_asr[counter],folder_epoch_asr,r_peak_events)
 # save_hep(folder_ecg,fpath_ecg[counter],folder_epoch_ecg,r_peak_events)
 
 
-###################################################
+################################################### This is just to automatically loop and extract whole RAW file
 for i in range(len(fpath_raw)):
 # data = [fpath_raw[10],fpath_raw[11],fpath_raw[12],fpath_raw[13]]
 # for i in range(14,22):
