@@ -85,7 +85,7 @@ def load_epoch_rest2(fdata):
 print(file_rest1)
 # fnum = int(input("Choose Data: "))
 
-for fnum in range(2,22):
+for fnum in range(4,5):
     epoch_rest = load_epoch_rest1(fnum)
     epoch_stress = load_epoch_stress(fnum)
     epoch_rest2 = load_epoch_rest2(fnum)
@@ -275,9 +275,10 @@ for fnum in range(2,22):
     ax.set_xticklabels(['Rest', 'Task'], fontsize=12)
     ax.set_ylabel('Value ', fontsize=12)
     # ax.set_ylim(-7e-5,7e-5)
-    fig.savefig(f'images/boxplot/dataset {fnum}/dataset {fnum} (All Channels {metrics[0]},{metrics[1]}).png')
+    # fig.savefig(f'images/boxplot/dataset {fnum}/dataset {fnum} (All Channels {metrics[0]},{metrics[1]}).png')
     # plt.close()
     # Show the plot
+    plt.grid(True)
     plt.show()
     
     for i in range(len(ch_names)):
@@ -297,10 +298,11 @@ for fnum in range(2,22):
         ax.set_xticklabels(['Rest', 'Task'], fontsize=12)
         ax.set_ylabel('Value ', fontsize=12)
         # ax.set_ylim(-7e-5,7e-5)
-        fig.savefig(f'images/boxplot/dataset {fnum}/dataset {fnum} ({ch_names[i]}).png')
+        # fig.savefig(f'images/boxplot/dataset {fnum}/dataset {fnum} ({ch_names[i]}).png')
         # plt.close()
         
         # Show the plot
+        plt.grid(True)
         plt.show()
     
     ###############################################################################

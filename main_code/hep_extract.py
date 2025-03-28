@@ -10,6 +10,7 @@ import numpy as np
 import os
 import neurokit2 as nk
 from wfdb import processing
+from matplotlib import pyplot as plt
 
 directory_path = "D:/EEG RESEARCH DATA"
 os.chdir(directory_path)
@@ -37,7 +38,7 @@ folder_epoch_ecg = "ecg_epoch"
 
 #####################################################
 
-counter = 8
+counter = 2
 
 raw = mne.io.read_raw_brainvision(os.path.join(folder_raw, fpath_raw[counter]))
 
@@ -63,6 +64,27 @@ if fpath_raw[counter] == '20240418_B98_jikken_0001.vhdr':
     tmax = tmin + 900
 
 ####EXTRACTING From RAW so Timing Trigger need to be adjusted####
+
+
+#### plot compare before and after bpf ecg ####
+raw_ecg = raw.copy().pick_types(ecg=True).crop(tmin = tmin, tmax = tmax)
+raw_ecg.load_data()
+mne_ecg,times = raw_ecg[:]
+mne_ecg = np.squeeze(-mne_ecg)
+
+bpf = raw_ecg.copy().filter(l_freq=0.5, h_freq=150,picks='ECG')
+mne_bpf = np.squeeze(-bpf.get_data())
+
+
+fig,(ax1 ,ax2) = plt.subplots(2,1,sharex = True, sharey= True)
+ax1.plot(mne_ecg*1e3)
+ax2.plot(mne_bpf*1e3)
+ax1.set_title('Raw ECG', fontsize =16)
+ax1.set_ylabel('mV', fontsize=14)
+ax2.set_title('Band Pass Filtered ECG', fontsize =16)
+ax2.set_ylabel('mV', fontsize=14)
+ax2.set_xlabel('Samples', fontsize=14)
+#### plot compare before and after bpf ecg ####
 
 ##################################################### 
 

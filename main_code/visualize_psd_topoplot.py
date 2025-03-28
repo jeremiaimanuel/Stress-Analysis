@@ -70,7 +70,7 @@ from wfdb import processing
 fs=1000
 
 mne_ecg,_ = raw[:]
-mne_ecg = np.squeeze(mne_ecg)
+mne_ecg = np.squeeze(mne_ecg*1e3)
 
 _, info = nk.ecg_process(mne_ecg, sampling_rate = fs) #Getting the R-Peak Location
 
@@ -85,7 +85,7 @@ f, (ax1, ax2) = plt.subplots(2, 1, sharex=True, sharey = True)
 ax1.plot(mne_ecg[start_plot:stop_plot])
 ax1.scatter(uncorr, mne_ecg[uncorr], color='red', s=50, marker='*')
 ax1.set_title("Uncorrected R-Peak", fontsize=16)
-ax1.set_ylabel('Amplitude (mV)', fontsize=14)
+ax1.set_ylabel('mV', fontsize=14)
 ax1.legend()
 ax1.grid(False)
 
@@ -93,7 +93,7 @@ ax2.plot(mne_ecg[start_plot:stop_plot])
 ax2.scatter(corr, mne_ecg[corr], color='red', s=50, marker='*')
 ax2.set_title("Corrected R-Peak", fontsize=16)
 ax2.set_xlabel('Samples', fontsize=14)
-ax2.set_ylabel('Amplitude (mV)', fontsize=14)
+ax2.set_ylabel('mV', fontsize=14)
 ax2.legend()
 ax2.grid(False)
 
